@@ -1,0 +1,19 @@
+{
+  "name": "wsysdig",
+  "version": "0.0.1",
+  "description": "The electron user interface for sysdig",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/draios/wsysdig",
+  "keywords": [
+    "Electron",
+    "sysdig"
+  ],
+  "author": "sysdig inc.",
+  "license": "GPL",
+  "devDependencies": {
+    "electron": "~1.6.2"
+  }
+}
