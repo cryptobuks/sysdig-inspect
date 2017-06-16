@@ -15,5 +15,9 @@
   "license": "GPL",
   "devDependencies": {
     "electron": "~1.6.2"
+  },
+  "dependencies": {
+    "electron-debug": "^1.1.0",
+    "express": "^4.0.0"
   }
 }

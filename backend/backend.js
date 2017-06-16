@@ -1,28 +1,66 @@
 // content of index.js
-const http = require('http')  
-const port = 3000
+const net = require('net')
+const express = require('express')
+var path = require("path");
 
-const requestHandler = (request, response) => {  
-  console.log(request.url)
-  response.end('Hello Node.js Server!')
+var baseport = 3000
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper functions
+///////////////////////////////////////////////////////////////////////////////
+function findAvailablePort(cb) {
+  var port = baseport
+  baseport += 1
+
+  var server = net.createServer()
+  server.listen(port, function (err) {
+    server.once('close', function () {
+      cb(port)
+    })
+    server.close()
+  })
+  server.on('error', function (err) {
+    findAvailablePort(cb)
+  })
 }
 
-///////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// The web server
+///////////////////////////////////////////////////////////////////////////////
+class Backend {
+  constructor() {
+    this.port = 0;
+  }
 
-var backend = function () {};
+  setupRoutes(app) {
+      app.get('/*', (request, response) => {
+        var url = request.url
 
-backend.prototype.start = function () {
-  console.log('buz!');
+        if(url === '/') {
+          url = 'index.html'
+        }  
+        response.sendFile(url, { root: __dirname + '/../ui' })
+      })
+  }
 
-  const server = http.createServer(requestHandler)
+  start(cb) {
+    findAvailablePort((port) => {
+      this.port = port;
 
-  server.listen(port, (err) => {  
-    if (err) {
-      return console.log('something bad happened', err)
-    }
+      const app = express()
 
-    console.log(`server is listening on ${port}`)
-  })
-};
+      this.setupRoutes(app);
 
-module.exports = new backend();
+      app.listen(port, (err) => {  
+        if (err) {
+          return console.log('error starting server: ', err)
+        }
+
+        console.log(`server is listening on ${port}`)
+        cb(port)
+      })
+    });
+  }
+}
+
+module.exports = new Backend();
