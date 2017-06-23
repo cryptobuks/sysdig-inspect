@@ -37,7 +37,7 @@ class Backend {
   setupRoutes(app) {
       app.get('/api/data', (request, response) => {
         response.setHeader('Content-Type', 'application/json');
-        sysdigController.run(['-r', 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\lo.scap', '--interactive'], response);
+        sysdigController.run(['-r', 'lo.scap', '--interactive'], response);
       });
     
       app.get('/*', (request, response) => {

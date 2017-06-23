@@ -1,7 +1,17 @@
 var spawn = require('child_process').spawn;
 
-const g_sysdigExe = "c:\\windump\\GitHub\\sysdig\\build\\Debug\\csysdig.exe";
-const g_sysdigDir = "c:\\windump\\GitHub\\sysdig\\build\\Debug\\";
+var g_sysdigExe;
+var g_sysdigDir;
+
+if(process.platform === 'win32') {
+    g_sysdigExe = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\csysdig.exe';
+    g_sysdigDir = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\';
+} else if(process.platform === 'darwin') {
+    g_sysdigExe = '/Users/loris/git/sysdig/build/userspace/sysdig/csysdig';
+    g_sysdigDir = '/Users/loris/git/sysdig/build/userspace/sysdig//';
+}
+
+
 const EOF = 255;
 
 class SysdigController {
@@ -47,9 +57,8 @@ class SysdigController {
             this.sendError(response, "cannot execute " + g_sysdigExe + ", make sure the program is properly installed");
         });
 
-//        this.prc.stdout.pipe(response);
         this.prc.stdout.on('data', (data) => {
-            console.log(`stderr: ${data}`);
+            console.log(`stdout: ${data}`);
 
             if(data[data.length - 1] == EOF) {
                 var sldata = data.slice(0, data.length - 1);
@@ -61,6 +70,7 @@ class SysdigController {
         });
 
         this.prc.stderr.on('data', (data) => {
+            console.log(`stderr: ${data}`);
             this.sendError(response, data);
         });        
 
