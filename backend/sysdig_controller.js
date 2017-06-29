@@ -16,68 +16,116 @@ const EOF = 255;
 
 class SysdigController {
     //
-    // Exectues csysdig
-    // Input: the array of command line arguments to use.
-    // Output: the spawned child process.
+    // This callback receives the standard output of csysdig on startup and, 
+    // after validating it, starts the application UI
     //
-    launchCsysdig(args) {
-        var options = {cwd: g_sysdigDir};
-        this.lasterr = '';
+    handleStdoutStartup(data, cb) {
+        console.log(`stdout: ${data}`);
+        
+        var str = String.fromCharCode.apply(null, data);
 
-        this.prc = spawn(g_sysdigExe, args, options);
-
-//        this.prc.stdout.setEncoding('utf8');
-//        this.prc.stderr.setEncoding('utf8');
-/*
-        this.prc.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-
-        this.prc.stderr.on('data', (data) => {
-            console.log(`stderr: ${data}`);
-        });
-
-        this.prc.on('close', (code) => {
-            console.log(`child process exited with code ${code}`);
-        });
-*/        
+        if(cb && str.includes('ready')) {
+            cb();
+        } else {
+            cb('error stating csysdig');
+        }
     }
 
-    sendError(response, message) {
+    //
+    // This callback receives the output from the csysdig stdout and pushes it
+    // to the given express response.
+    //
+    serveRequest(data, response) {
+        console.log(`stderr: ${data}`);
+
+        if(data[data.length - 1] == EOF) {
+            var sldata = data.slice(0, data.length - 1);
+            response.write(sldata);
+            response.end();
+            this.response = undefined;
+        } else {
+            response.write(data);                
+        }
+    }
+
+    sendError(message, response) {
         var resBody = {reason: message};
 
         response.status(500);
         response.send(JSON.stringify(resBody));
     }
 
-    run(args, response) {
-        this.launchCsysdig(args);
+    //
+    // Starts csysdig
+    // Input: the array of command line arguments to use.
+    // Output: the spawned child process.
+    //
+    start(args, cb) {
+        var options = {cwd: g_sysdigDir};
+        this.lasterr = '';
+        this.cb = cb
 
-        this.prc.on('error', (err) => {
-            this.sendError(response, "cannot execute " + g_sysdigExe + ", make sure the program is properly installed");
-        });
+        this.prc = spawn(g_sysdigExe, args, options);
+
+        //this.prc.stdout.setEncoding('utf8');
+        this.prc.stderr.setEncoding('utf8');
+        this.prc.stdin.setEncoding('utf8');
 
         this.prc.stdout.on('data', (data) => {
+<<<<<<< Updated upstream
             console.log(`stdout: ${data}`);
 
             if(data[data.length - 1] == EOF) {
                 var sldata = data.slice(0, data.length - 1);
                 response.write(sldata);
                 response.end();
+=======
+            if(this.cb) {
+                this.handleStdoutStartup(data, this.cb);
+                this.cb = undefined;
+>>>>>>> Stashed changes
             } else {
-                response.write(data);                
+                this.serveRequest(data, this.response);
             }
         });
 
         this.prc.stderr.on('data', (data) => {
+<<<<<<< Updated upstream
             console.log(`stderr: ${data}`);
             this.sendError(response, data);
         });        
+=======
+            if(this.cb) {
+                this.cb(data);
+                this.cb = undefined;
+            } else {
+                this.sendError(data, this.response);
+            }
+        });
+>>>>>>> Stashed changes
 
         this.prc.on('close', (code) => {
-            response.end();
+            // XXX decide what to do here. Probably relaunch sysdig?
             console.log(`child process exited with code ${code}`);
         });
+
+        this.prc.on('error', (err) => {
+            cb('Cannot start csysdig. Make sure sysdig is installed correctly.');
+        });
+    }
+
+    //
+    // This is the API entry point. It works by sending the command to the 
+    // csysdig stdin and configuring the express response that will be completed
+    // by the serveRequest() callback. 
+    //
+    run(command, response) {
+        if(this.response) {
+            this.sendError("request already in progress", response);
+        }
+
+        this.response = response;
+        this.prc.stdin.write(command);
     }
 }
 

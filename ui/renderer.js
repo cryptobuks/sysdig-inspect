@@ -22,12 +22,40 @@ class Renderer {
         this.port = remote.getGlobal('port');
     }
 
+    loadJSON(url, callback, method = 'GET', payload) {
+        var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+        xobj.open(method, url, true);
+        xobj.onreadystatechange = function () {
+            if (xobj.readyState == 4 && xobj.status == "200") {
+                callback(xobj.responseText);
+            }
+        };
+
+        if (payload) {
+            xobj.send(payload);
+        }
+        else {
+            xobj.send(null);
+        }
+    }
+
+    //
+    // ENTRY POINT
+    //
     init() {
-        if(this.isElecton()) {
+        if (this.isElecton()) {
             this.initElectron();
         } else {
             this.port = location.port;
         }
+
+        loadJSON('report', function (response) {
+            // Parse JSON string into object
+            data = JSON.parse(response)
+            render_aggregations();
+        });
+
     }
 }
 

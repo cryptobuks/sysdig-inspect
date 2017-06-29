@@ -2,7 +2,6 @@
 const net = require('net')
 const express = require('express')
 const sysdigController = require('./sysdig_controller.js')
-
 var path = require("path");
 
 var baseport = 3000;
@@ -34,10 +33,14 @@ class Backend {
     this.port = 0;
   }
 
-  setupRoutes(app) {
+  _setupRoutes(app) {
       app.get('/api/data', (request, response) => {
         response.setHeader('Content-Type', 'application/json');
+<<<<<<< Updated upstream
         sysdigController.run(['-r', 'lo.scap', '--interactive'], response);
+=======
+        sysdigController.run('{"action":"apply", "args":{"view": "files"}}\n', response);
+>>>>>>> Stashed changes
       });
     
       app.get('/*', (request, response) => {
@@ -51,21 +54,26 @@ class Backend {
       });
   }
 
-  start(cb) {
+  start(fileName, cb) {
     findAvailablePort((port) => {
       this.port = port;
 
       const app = express();
 
-      this.setupRoutes(app);
+      this._setupRoutes(app);
 
       app.listen(port, (err) => {  
         if (err) {
-          return console.log('error starting server: ', err);
+          console.log('error starting server: ', err);
+          cb(port, 'error starting server: ' + err);
         }
 
-        console.log('server is listening on ${port}');
-        cb(port);
+        console.log('server is listening on port ' + port);
+
+        this.fileName = fileName;
+        sysdigController.start(['-r', this.fileName, '--interactive'], (err) => {
+          cb(port, err);
+        });
       })
     });
   }
