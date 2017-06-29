@@ -36,11 +36,7 @@ class Backend {
   _setupRoutes(app) {
       app.get('/api/data', (request, response) => {
         response.setHeader('Content-Type', 'application/json');
-<<<<<<< Updated upstream
-        sysdigController.run(['-r', 'lo.scap', '--interactive'], response);
-=======
         sysdigController.run('{"action":"apply", "args":{"view": "files"}}\n', response);
->>>>>>> Stashed changes
       });
     
       app.get('/*', (request, response) => {

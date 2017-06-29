@@ -72,29 +72,15 @@ class SysdigController {
         this.prc.stdin.setEncoding('utf8');
 
         this.prc.stdout.on('data', (data) => {
-<<<<<<< Updated upstream
-            console.log(`stdout: ${data}`);
-
-            if(data[data.length - 1] == EOF) {
-                var sldata = data.slice(0, data.length - 1);
-                response.write(sldata);
-                response.end();
-=======
             if(this.cb) {
                 this.handleStdoutStartup(data, this.cb);
                 this.cb = undefined;
->>>>>>> Stashed changes
             } else {
                 this.serveRequest(data, this.response);
             }
         });
 
         this.prc.stderr.on('data', (data) => {
-<<<<<<< Updated upstream
-            console.log(`stderr: ${data}`);
-            this.sendError(response, data);
-        });        
-=======
             if(this.cb) {
                 this.cb(data);
                 this.cb = undefined;
@@ -102,7 +88,6 @@ class SysdigController {
                 this.sendError(data, this.response);
             }
         });
->>>>>>> Stashed changes
 
         this.prc.on('close', (code) => {
             // XXX decide what to do here. Probably relaunch sysdig?
