@@ -34,16 +34,19 @@ class Backend {
   }
 
   _setupRoutes(app) {
-      app.get('/api/data', (request, response) => {
+      app.get('/capture/:fileName/:view', (request, response) => {
+        var fileName = request.params.fileName;
+        var view = request.params.view;
         response.setHeader('Content-Type', 'application/json');
-        sysdigController.run('{"action":"apply", "args":{"view": "files"}}\n', response);
+        
+        sysdigController.run(['-r', fileName, '-v', view, '-j'], response);
       });
     
       app.get('/*', (request, response) => {
         var url = request.url;
 
         if(url === '/') {
-          url = 'index.html';
+          url = '';
         }
 
         response.sendFile(url, { root: __dirname + '/../ui' });
@@ -67,9 +70,7 @@ class Backend {
         console.log('server is listening on port ' + port);
 
         this.fileName = fileName;
-        sysdigController.start(['-r', this.fileName, '--interactive'], (err) => {
-          cb(port, err);
-        });
+        cb(port);
       })
     });
   }
