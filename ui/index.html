@@ -1,13 +1,30 @@
 <!DOCTYPE html>
 <html>
-  <script src="./renderer.js"></script>
+  <script src="renderer.js"></script>
 
   <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <meta charset="UTF-8">
     <title>Hello World!</title>
   </head>
 
   <body onload="init()">
-    <h1>Hello World!</h1>
+    <font face='arial' size="1.5">
+        <h1>Views</h1>
+        <div style="position:absolute;top:5px;right:0;">
+            <b>q/a</b>: navigate aggregations <b>w/s</b>: navigate entities <b>p/l</b>: navigate groups <b>z</b>: change sorting <b>m</b>: show customers
+        </div>
+	    <div>
+          <p id="views" style="padding: 10px;"></p>
+	    </div>
+	    <div style="float: left;width: 100%;">
+		    <div style="float: left;width: 100%;">
+			    <h1 id="dtitle">Data</h1>
+			    <div id="data">
+            <table id="dtable" style="width:100%;text-align: left;"></table>
+          </div>
+		    </div>
+	    </div>
+    </font>
   </body>
 </html>

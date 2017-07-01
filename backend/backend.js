@@ -46,7 +46,7 @@ class Backend {
         var url = request.url;
 
         if(url === '/') {
-          url = '';
+          url = 'index.html';
         }
 
         response.sendFile(url, { root: __dirname + '/../ui' });
