@@ -1,6 +1,15 @@
+var g_views = [
+    {name : 'Processes', id: 'procs'},
+    {name : 'Files', id: 'files'},
+    {name : 'Directories', id: 'directories'}
+];
+
 class Renderer {
     constructor() {
         this.port = 0;
+        this.selectedView = 0;
+        this.selectedRow = 0;
+        this.nRows = 0;
     }
 
     //
@@ -46,19 +55,33 @@ class Renderer {
     //
     // Page rendering functions
     //
+    renderViewsList() {
+        var div = document.getElementById('views');
+
+        div.innerHTML = '';
+
+        for(var j = 0; j < g_views.length; j++) {
+            var view = g_views[j];
+
+            div.innerHTML = div.innerHTML + 
+                ('<div id="v_' + j + '"><a href="#" onclick="renderer.loadView(' + j + ')">' + view.name + '</a></div');
+        }
+    }
+
     renderView(jdata) {
         var div = document.getElementById('dtable');
         var alist = [];
         var legend = jdata.info.legend;
         var ncols = legend.length;
         var rows = jdata.data;
+        this.nRows = rows.length;
 
         div.innerHTML = '';
 
         //
         // Render the column headers
         //
-        var row = '<tr style="background-color: #FF0000;">';
+        var row = '<tr style="background-color: #BBBBBB;">';
         for(var j = 0; j < legend.length; j++) {
             row += '<th>';
             row += legend[j].name;
@@ -84,14 +107,76 @@ class Renderer {
             div.innerHTML += row;
         }
 
-        document.getElementById('r_2').style['background-color'] = '#FFFF00';
+        document.getElementById('r_' + this.selectedRow).style['background-color'] = '#FFFF00';
     }
 
     //
-    // Drilldown function
+    // Bakend interaction functions
     //
+    loadView(viewNum) {
+        var div = document.getElementById('dtable');
+        div.innerHTML = '';
+
+        document.getElementById('v_' + renderer.selectedView).style['background-color'] = '#FFFFFF';
+        document.getElementById('v_' + viewNum).style['background-color'] = '#FFFF00';
+
+        var view = g_views[viewNum];
+
+        renderer.selectedView = viewNum;
+
+        this.loadJSON('/capture/lo.scap/' + view.id, (response) => {
+            // Parse JSON string into object
+            var jdata = JSON.parse(response)
+            this.renderView(jdata);
+        });
+    }
+
     drillDown(rowNum) {
         var a = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Keyboard handler
+    ///////////////////////////////////////////////////////////////////////////////
+    onKeyDown(evt) {
+        evt = evt || window.event;
+        if(evt.key == 'q')
+        {
+            var newView = renderer.selectedView;
+            if(newView > 0)
+            {
+                newView--;
+            }
+        
+            renderer.loadView(newView);
+        } else if(evt.key == 'a') {
+            var newView = renderer.selectedView;
+            if(newView < g_views.length - 1)
+            {
+                newView++;
+            }
+            renderer.loadView(newView);
+        } if(evt.key == 'p') {
+            var newRow = renderer.selectedRow;
+            if(newRow > 0)
+            {
+                newRow--;
+            }
+        
+            document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
+            renderer.selectedRow = newRow;
+        } else if(evt.key == 'l') {
+            var newRow = renderer.selectedRow;
+            if(newRow < renderer.nRows - 1)
+            {
+                newRow++;
+            }
+
+            document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
+            renderer.selectedRow = newRow;
+        }
     }
 
     //
@@ -104,17 +189,14 @@ class Renderer {
             this.port = location.port;
         }
 
-        this.loadJSON('/capture/lo.scap/procs', (response) => {
-            // Parse JSON string into object
-            var jdata = JSON.parse(response)
-            this.renderView(jdata);
-        });
-
+        this.renderViewsList();
+        this.loadView(this.selectedView);
     }
 }
 
 var renderer = new Renderer();
 
 function init() {
+    document.onkeydown = renderer.onKeyDown;    
     renderer.init();
 }
