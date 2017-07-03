@@ -6,6 +6,7 @@ var g_views = [
 
 class Renderer {
     constructor() {
+        this.urlBase = '';
         this.port = 0;
         this.selectedView = 0;
         this.selectedRow = 0;
@@ -29,6 +30,7 @@ class Renderer {
         //
         const remote = require('electron').remote;
         this.port = remote.getGlobal('port');
+        this.urlBase = 'http://localhost:' + this.port;
     }
 
     //
@@ -37,7 +39,7 @@ class Renderer {
     loadJSON(url, callback, method = 'GET', payload) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-        xobj.open(method, url, true);
+        xobj.open(method, this.urlBase + url, true);
         xobj.onreadystatechange = function () {
             if (xobj.readyState == 4 && xobj.status == "200") {
                 callback(xobj.responseText);
@@ -187,6 +189,7 @@ class Renderer {
             this.initElectron();
         } else {
             this.port = location.port;
+            this.urlBase = '';
         }
 
         this.renderViewsList();
