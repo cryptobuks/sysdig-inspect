@@ -17,30 +17,38 @@ const dialog = electron.dialog;
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-function createWindow () {
-  var fileName;
+var g_fileName;
 
+function createWindow () {
   //
   // Parse the command line arguments
   //
   var argv = require('yargs').argv;
 
-  if(argv.r) {
-    fileName = argv.r;
-  } else {
-    dialog.showOpenDialog(mainWindow, {properties: ['openDirectory']})
+  if(g_fileName === undefined) {
+    if(argv.r) {
+      g_fileName = argv.r;
+    } else {
+      var res = dialog.showOpenDialog(mainWindow, {properties: ['openFile'], message: 'Select a Capture File to Open'});
+      if(res) {
+        g_fileName = res[0];
+      } else {
+        g_fileName = '';        
+      }
+    }
   }
 
   //
   // Start the backend
   //
-  backend.start(fileName, (port, err) => {
+  backend.start(g_fileName, (port, err) => {
     if(err) {
       dialog.showErrorBox("Unable to start the application", err);
       return;
     }
 
     global.port = port;
+    global.fileName = g_fileName;
 
     // 
     // Backend up and running. Create the browser window.
@@ -62,14 +70,14 @@ function createWindow () {
       // when you should delete the corresponding element.
       //
       mainWindow = null
-    })
+    });
 
     // and load the index.html of the app.
     mainWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'ui', 'index.html'),
       protocol: 'file:',
       slashes: true
-    }))
+    }));
   })
 }
 

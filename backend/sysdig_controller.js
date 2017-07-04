@@ -4,11 +4,11 @@ var g_sysdigExe;
 var g_sysdigDir;
 
 if(process.platform === 'win32') {
-    g_sysdigExe = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\csysdig.exe';
-    g_sysdigDir = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\';
+    g_sysdigExe = __dirname + '\\..\\sysdig\\csysdig.exe';
+    g_sysdigDir = __dirname + '\\..\\sysdig\\';
 } else if(process.platform === 'darwin') {
-    g_sysdigExe = '/Users/loris/git/sysdig/build/userspace/sysdig/csysdig';
-    g_sysdigDir = '/Users/loris/git/sysdig/build/userspace/sysdig//';
+    g_sysdigExe = __dirname + '/../sysdig/csysdig';
+    g_sysdigDir = __dirname + '/../sysdig/';
 }
 
 
@@ -29,7 +29,7 @@ class SysdigController {
     run(args, response) {
         var options = {cwd: g_sysdigDir};
 
-        console.log(`spawning sysdig with args: ${args}`);
+        console.log(`spawning ${g_sysdigExe} with args: ${args}`);
         this.prc = spawn(g_sysdigExe, args, options);
 
         this.prc.stdout.setEncoding('utf8');

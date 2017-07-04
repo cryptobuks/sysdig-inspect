@@ -1,3 +1,5 @@
+var g_defaultFileName = 'lo.scap';
+
 var g_views = [
     {name : 'Processes', id: 'procs'},
     {name : 'Files', id: 'files'},
@@ -11,6 +13,7 @@ class Renderer {
         this.selectedView = 0;
         this.selectedRow = 0;
         this.nRows = 0;
+        this.fileName = g_defaultFileName;
     }
 
     //
@@ -30,6 +33,7 @@ class Renderer {
         //
         const remote = require('electron').remote;
         this.port = remote.getGlobal('port');
+        this.fileName = remote.getGlobal('fileName');
         this.urlBase = 'http://localhost:' + this.port;
     }
 
@@ -41,8 +45,16 @@ class Renderer {
         xobj.overrideMimeType("application/json");
         xobj.open(method, this.urlBase + url, true);
         xobj.onreadystatechange = function () {
-            if (xobj.readyState == 4 && xobj.status == "200") {
-                callback(xobj.responseText);
+            if(xobj.readyState == 4) {
+                if(xobj.status == "200") {
+                    callback(xobj.responseText);
+                } else {
+                    var body = xobj.responseText;
+                    if(body && body !== '') {
+                        var jbody = JSON.parse(body);
+                        alert(jbody.reason);
+                    }
+                }
             }
         };
 
@@ -126,9 +138,10 @@ class Renderer {
 
         renderer.selectedView = viewNum;
 
-        this.loadJSON('/capture/lo.scap/' + view.id, (response) => {
+        var encodedFileName = encodeURIComponent(this.fileName);
+        this.loadJSON('/capture/' + encodedFileName + '/' + view.id, (response) => {
             // Parse JSON string into object
-            var jdata = JSON.parse(response)
+            var jdata = JSON.parse(response);
             this.renderView(jdata);
         });
     }
