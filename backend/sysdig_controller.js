@@ -4,8 +4,10 @@ var g_sysdigExe;
 var g_sysdigDir;
 
 if(process.platform === 'win32') {
-    g_sysdigExe = __dirname + '\\..\\sysdig\\csysdig.exe';
-    g_sysdigDir = __dirname + '\\..\\sysdig\\';
+//    g_sysdigExe = __dirname + '\\..\\sysdig\\csysdig.exe';
+//    g_sysdigDir = __dirname + '\\..\\sysdig\\';
+    g_sysdigExe = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\csysdig.exe';
+    g_sysdigDir = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\';
 } else if(process.platform === 'darwin') {
     g_sysdigExe = __dirname + '/../sysdig/csysdig';
     g_sysdigDir = __dirname + '/../sysdig/';

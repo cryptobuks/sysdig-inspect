@@ -1,8 +1,9 @@
 var g_defaultFileName = 'lo.scap';
+const MAX_N_ROWS = 30;
 
 var g_views = [
-    {name : 'Processes', id: 'procs'},
     {name : 'Files', id: 'files'},
+    {name : 'Processes', id: 'procs'},
     {name : 'Directories', id: 'directories'}
 ];
 
@@ -38,7 +39,7 @@ class Renderer {
     }
 
     //
-    // Data request helper
+    // Data communication helpers
     //
     loadJSON(url, callback, method = 'GET', payload) {
         var xobj = new XMLHttpRequest();
@@ -49,6 +50,9 @@ class Renderer {
                 if(xobj.status == "200") {
                     callback(xobj.responseText);
                 } else {
+                    //
+                    // Poor man's error handling
+                    //
                     var body = xobj.responseText;
                     if(body && body !== '') {
                         var jbody = JSON.parse(body);
@@ -66,6 +70,12 @@ class Renderer {
         }
     }
 
+    encodeQueryData(data) {
+        let ret = [];
+        for (let d in data)
+            ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
+        return ret.join('&');
+    }
     //
     // Page rendering functions
     //
@@ -139,7 +149,9 @@ class Renderer {
         renderer.selectedView = viewNum;
 
         var encodedFileName = encodeURIComponent(this.fileName);
-        this.loadJSON('/capture/' + encodedFileName + '/' + view.id, (response) => {
+        var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
+
+        this.loadJSON('/capture/' + encodedFileName + '/' + view.id + '?' + encodedQueryArgs, (response) => {
             // Parse JSON string into object
             var jdata = JSON.parse(response);
             this.renderView(jdata);

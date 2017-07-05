@@ -39,7 +39,18 @@ class Backend {
         var view = request.params.view;
         response.setHeader('Content-Type', 'application/json');
         
-        sysdigController.run(['-r', fileName, '-v', view, '-j'], response);
+        var args = ['-r', fileName, '-v', view, '-j'];
+        if('from' in request.query) {
+          args.push('--from');
+          args.push(request.query.from);
+        }
+
+        if('to' in request.query) {
+          args.push('--to');
+          args.push(request.query.to);
+        }
+
+        sysdigController.run(args, response);
       });
     
       app.get('/*', (request, response) => {
