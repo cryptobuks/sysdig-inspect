@@ -33,26 +33,47 @@ class Backend {
     this.port = 0;
   }
 
+  _listViews(request, response) {
+      var args = ['--list-views'];
+      sysdigController.run(args, response);
+  }
+
+  _getView(request, response) {
+      var fileName = request.params.fileName;
+      var viewInfo = JSON.parse(request.params.view);
+      response.setHeader('Content-Type', 'application/json');
+      
+      var args = ['-r', fileName, '-v', viewInfo.id, '-j'];
+      if('from' in request.query) {
+        args.push('--from');
+        args.push(request.query.from);
+      }
+
+      if('filter' in viewInfo) {
+        args.push(viewInfo.filter);        
+      }
+
+      if('to' in request.query) {
+        args.push('--to');
+        args.push(request.query.to);
+      }
+
+      sysdigController.run(args, response);
+  }
+
   _setupRoutes(app) {
-      app.get('/capture/:fileName/:view', (request, response) => {
-        var fileName = request.params.fileName;
-        var view = request.params.view;
-        response.setHeader('Content-Type', 'application/json');
-        
-        var args = ['-r', fileName, '-v', view, '-j'];
-        if('from' in request.query) {
-          args.push('--from');
-          args.push(request.query.from);
-        }
-
-        if('to' in request.query) {
-          args.push('--to');
-          args.push(request.query.to);
-        }
-
-        sysdigController.run(args, response);
+      app.get('/capture/views', (request, response) => {
+        this._listViews(request, response)
       });
-    
+
+      app.get('/capture/:fileName/:view', (request, response) => {
+        this._getView(request, response)
+      });
+
+      app.get('/capture/:fileName/*/:view', (request, response) => {
+        this._getView(request, response)
+      });
+          
       app.get('/*', (request, response) => {
         var url = request.url;
 

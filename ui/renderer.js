@@ -1,11 +1,76 @@
 var g_defaultFileName = 'lo.scap';
 const MAX_N_ROWS = 30;
+const FILTER_TEMPLATE_MAGIC = '@#$f1CA^&;';
 
 var g_views = [
-    {name : 'Files', id: 'files'},
-    {name : 'Processes', id: 'procs'},
-    {name : 'Directories', id: 'directories'}
+    {name : 'Directories', id: 'directories', 'drilldownTarget': 'files'},
+    {name : 'Files', id: 'files', 'drilldownTarget': 'procs'},
+    {name : 'Processes', id: 'procs', 'drilldownTarget': 'directories'},
 ];
+
+class HierarchyManager {
+    constructor() {
+        this.current = {'drillDownInfo': {rowNum: 0}};
+        this.list = [];
+    }
+
+    switch(newViewDetails) {
+//        this.list.pop();
+//        this.list.push(newViewDetails);
+        var drillDownInfo = this.current.drillDownInfo;
+        this.current = {details: newViewDetails, 'drillDownInfo': drillDownInfo};
+    }
+
+    drilldown(newViewDetails, rowNum, filterTemplate, rowKey) {
+        this.current.drillDownInfo.rowNum = rowNum;
+        this.list.push(this.current);
+
+        var filter = filterTemplate.replace(FILTER_TEMPLATE_MAGIC, rowKey);
+
+        this.current = {
+            details: newViewDetails, 
+            drillDownInfo : {'filter': filter, 'rowNum': 0}
+        };
+    }
+
+    getUrl(fileName) {
+        var view = this.current;
+        var encodedFileName = encodeURIComponent(fileName);
+        
+        var drillDownStr = '';
+        for(var j = 0; j < this.list.length; j++) {
+            var ddview = this.list[j].details;
+            var drillDownInfo = this.list[j].drillDownInfo;
+
+            drillDownStr += encodeURIComponent(JSON.stringify({id: ddview.id, 
+                filter: drillDownInfo.filter, 
+                rowNum: drillDownInfo.rowNum}));
+            drillDownStr += '/';
+        }
+
+        var currentStr = encodeURIComponent(JSON.stringify({id: view.details.id, 
+            filter: view.drillDownInfo.filter}));
+
+        return '/capture/' + encodedFileName + '/' + drillDownStr + currentStr;
+    }
+
+    render() {
+        var el = document.getElementById('hierarchy');
+        el.innerHTML = '';
+
+        for(var j = 0; j < this.list.length; j++) {
+            var ddview = this.list[j].details;
+
+            el.innerHTML += 
+                '<a href="#" onclick="renderer.loadView(' + j + ')">' + 
+                ddview.name +
+                '</a>' + ' / ';
+        }
+
+        var view = this.current;
+        el.innerHTML += view.details.name;
+    }
+}
 
 class Renderer {
     constructor() {
@@ -15,8 +80,15 @@ class Renderer {
         this.selectedRow = 0;
         this.nRows = 0;
         this.fileName = g_defaultFileName;
+        this.views = undefined;
+        this.hierarchyManager = new HierarchyManager();
+        this.curViewData = undefined;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialization support
+    ///////////////////////////////////////////////////////////////////////////
+    
     //
     // Check if we're running inside electron
     //
@@ -38,9 +110,9 @@ class Renderer {
         this.urlBase = 'http://localhost:' + this.port;
     }
 
-    //
+    ///////////////////////////////////////////////////////////////////////////
     // Data communication helpers
-    //
+    ///////////////////////////////////////////////////////////////////////////
     loadJSON(url, callback, method = 'GET', payload) {
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
@@ -76,28 +148,45 @@ class Renderer {
             ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
         return ret.join('&');
     }
-    //
+
+    ///////////////////////////////////////////////////////////////////////////
     // Page rendering functions
-    //
-    renderViewsList() {
+    ///////////////////////////////////////////////////////////////////////////
+    renderViewsList(jdata) {
         var div = document.getElementById('views');
 
         div.innerHTML = '';
 
-        for(var j = 0; j < g_views.length; j++) {
-            var view = g_views[j];
+        for(var j = 0; j < jdata.length; j++) {
+            var view = jdata[j];
 
             div.innerHTML = div.innerHTML + 
                 ('<div id="v_' + j + '"><a href="#" onclick="renderer.loadView(' + j + ')">' + view.name + '</a></div');
+
+            //
+            // While we're here, select the root view
+            //
+            // if(view.isRoot) {
+            //     renderer.selectedView = j;
+            // }
         }
+
+        this.views = jdata;
     }
 
     renderView(jdata) {
         var div = document.getElementById('dtable');
         var alist = [];
+        this.curViewData = jdata;
         var legend = jdata.info.legend;
         var ncols = legend.length;
         var rows = jdata.data;
+
+        if(!('data' in jdata)) {
+            div.innerHTML = 'No data for this view';
+            return;
+        }
+
         this.nRows = rows.length;
 
         div.innerHTML = '';
@@ -120,7 +209,7 @@ class Renderer {
         //
         for(var r = 0; r < rows.length; r++) {
             var rowdata = rows[r].d;
-            var row = '<tr id="r_' + r + '" onclick="renderer.drillDown(r);">';
+            var row = '<tr id="r_' + r + '" onclick="renderer.drillDown(' + r + ');">';
             for(var j = 0; j < rowdata.length; j++) {
                 row += '<th></b>';
                 row += rowdata[j];
@@ -134,32 +223,69 @@ class Renderer {
         document.getElementById('r_' + this.selectedRow).style['background-color'] = '#FFFF00';
     }
 
-    //
+    ///////////////////////////////////////////////////////////////////////////
     // Bakend interaction functions
-    //
+    ///////////////////////////////////////////////////////////////////////////
+    loadViewsList(callback) {
+        // this.loadJSON('/capture/views', (response) => {
+        //     var jdata = JSON.parse(response);
+        //     this.renderViewsList(jdata);
+        //     callback();
+        // });
+        this.renderViewsList(g_views);
+        callback();
+    }
+
     loadView(viewNum) {
+        var view = this.views[viewNum];
+
+        //
+        // Update the hierarcy and get the URL to use from the hierarchy manager
+        //
+        this.hierarchyManager.switch(view);
+        this.hierarchyManager.render();
+        var url = this.hierarchyManager.getUrl(this.fileName);
+
+        //
+        // Render the view content
+        //
         var div = document.getElementById('dtable');
         div.innerHTML = '';
 
-        document.getElementById('v_' + renderer.selectedView).style['background-color'] = '#FFFFFF';
+        document.getElementById('v_' + this.selectedView).style['background-color'] = '#FFFFFF';
         document.getElementById('v_' + viewNum).style['background-color'] = '#FFFF00';
 
-        var view = g_views[viewNum];
+        this.selectedView = viewNum;
 
-        renderer.selectedView = viewNum;
-
-        var encodedFileName = encodeURIComponent(this.fileName);
         var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
 
-        this.loadJSON('/capture/' + encodedFileName + '/' + view.id + '?' + encodedQueryArgs, (response) => {
+        this.loadJSON(url + '?' + encodedQueryArgs, (response) => {
             // Parse JSON string into object
             var jdata = JSON.parse(response);
             this.renderView(jdata);
         });
     }
 
+    getViewNumById(id) {
+        for(var j = 0; j < this.views.length; j++) {
+            if(this.views[j].id == id) {
+                return j;
+            }
+        }
+
+        return undefined;
+    }
+
     drillDown(rowNum) {
-        var a = 0;
+        var cView = this.views[this.selectedView];
+        var jnextViewNum = this.getViewNumById(cView.drilldownTarget);
+
+        this.hierarchyManager.drilldown(this.views[jnextViewNum],
+            rowNum,
+            this.curViewData.info.filterTemplate,
+            this.curViewData.data[rowNum].k);
+
+        this.loadView(jnextViewNum);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -178,7 +304,7 @@ class Renderer {
             renderer.loadView(newView);
         } else if(evt.key == 'a') {
             var newView = renderer.selectedView;
-            if(newView < g_views.length - 1)
+            if(newView < renderer.views.length - 1)
             {
                 newView++;
             }
@@ -217,8 +343,9 @@ class Renderer {
             this.urlBase = '';
         }
 
-        this.renderViewsList();
-        this.loadView(this.selectedView);
+        this.loadViewsList(() => {
+            this.loadView(this.selectedView);
+        });
     }
 }
 
