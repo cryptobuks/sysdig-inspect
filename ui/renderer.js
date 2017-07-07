@@ -14,14 +14,18 @@ class HierarchyManager {
         this.list = [];
     }
 
+    //
+    // Switches view but stays at the same drilldown level
+    //
     switch(newViewDetails) {
-//        this.list.pop();
-//        this.list.push(newViewDetails);
         var drillDownInfo = this.current.drillDownInfo;
         this.current = {details: newViewDetails, 'drillDownInfo': drillDownInfo};
     }
 
-    drilldown(newViewDetails, rowNum, filterTemplate, rowKey) {
+    //
+    // Drills down one level
+    //
+    drillDown(newViewDetails, rowNum, filterTemplate, rowKey) {
         this.current.drillDownInfo.rowNum = rowNum;
         this.list.push(this.current);
 
@@ -33,6 +37,22 @@ class HierarchyManager {
         };
     }
 
+    //
+    // Drills up to the specified level
+    //
+    drillUp(level) {
+        if(level >= this.list.length) {
+            return undefined;
+        }
+
+        this.current = this.list[level];
+        this.list = this.list.slice(0, level);
+        return this.current;
+    }
+
+    //
+    // Creates the URL to send to the server
+    //
     getUrl(fileName) {
         var view = this.current;
         var encodedFileName = encodeURIComponent(fileName);
@@ -54,6 +74,10 @@ class HierarchyManager {
         return '/capture/' + encodedFileName + '/' + drillDownStr + currentStr;
     }
 
+    //
+    // Renders the hierarchy breadcrumb.
+    // This is specific to the current crappy UI.
+    //
     render() {
         var el = document.getElementById('hierarchy');
         el.innerHTML = '';
@@ -62,7 +86,7 @@ class HierarchyManager {
             var ddview = this.list[j].details;
 
             el.innerHTML += 
-                '<a href="#" onclick="renderer.loadView(' + j + ')">' + 
+                '<a href="#" onclick="renderer.drillUp(' + j + ')">' + 
                 ddview.name +
                 '</a>' + ' / ';
         }
@@ -280,12 +304,20 @@ class Renderer {
         var cView = this.views[this.selectedView];
         var jnextViewNum = this.getViewNumById(cView.drilldownTarget);
 
-        this.hierarchyManager.drilldown(this.views[jnextViewNum],
+        this.hierarchyManager.drillDown(this.views[jnextViewNum],
             rowNum,
             this.curViewData.info.filterTemplate,
             this.curViewData.data[rowNum].k);
 
         this.loadView(jnextViewNum);
+    }
+
+    drillUp(level) {
+        var newView = this.hierarchyManager.drillUp(level);
+        var jnextViewNum = this.getViewNumById(newView.details.id);
+
+        this.loadView(jnextViewNum);
+//        this.selectedRow = newView
     }
 
     ///////////////////////////////////////////////////////////////////////////////
