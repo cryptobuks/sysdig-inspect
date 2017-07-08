@@ -14,6 +14,10 @@ class HierarchyManager {
         this.list = [];
     }
 
+    getHierarchyDepth() {
+        return this.list.length;
+    }
+
     //
     // Switches view but stays at the same drilldown level
     //
@@ -260,9 +264,13 @@ class Renderer {
         callback();
     }
 
-    loadView(viewNum) {
+    loadView(viewNum, resetRow) {
         var view = this.views[viewNum];
 
+        if(true) {
+            this.selectedRow = 0;
+        }
+        
         //
         // Update the hierarcy and get the URL to use from the hierarchy manager
         //
@@ -317,7 +325,12 @@ class Renderer {
         var jnextViewNum = this.getViewNumById(newView.details.id);
 
         this.loadView(jnextViewNum);
-//        this.selectedRow = newView
+        this.selectedRow = newView.drillDownInfo.rowNum;
+    }
+
+    drillUpOne() {
+        var newLevel = this.hierarchyManager.getHierarchyDepth();
+        this.drillUp(newLevel - 1);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -348,7 +361,9 @@ class Renderer {
                 newRow--;
             }
         
-            document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            if(renderer.views.length > 1) {
+                document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            }
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
             renderer.selectedRow = newRow;
         } else if(evt.key == 'l') {
@@ -358,9 +373,15 @@ class Renderer {
                 newRow++;
             }
 
-            document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            if(renderer.views.length > 1) {
+                document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            }
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
             renderer.selectedRow = newRow;
+        } else if(evt.key == 'Enter') {
+            renderer.drillDown(renderer.selectedRow);
+        } else if(evt.key == 'Backspace') {
+            renderer.drillUpOne();
         }
     }
 
