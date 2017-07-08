@@ -255,21 +255,19 @@ class Renderer {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadViewsList(callback) {
-        // this.loadJSON('/capture/views', (response) => {
-        //     var jdata = JSON.parse(response);
-        //     this.renderViewsList(jdata);
-        //     callback();
-        // });
-        this.renderViewsList(g_views);
-        callback();
+        this.loadJSON('/capture/views', (response) => {
+            var jdata = JSON.parse(response);
+            this.renderViewsList(jdata);
+            callback();
+        });
+//        this.renderViewsList(g_views);
+//        callback();
     }
 
-    loadView(viewNum, resetRow) {
+    loadView(viewNum) {
         var view = this.views[viewNum];
 
-        if(true) {
-            this.selectedRow = 0;
-        }
+        this.selectedRow = 0;
         
         //
         // Update the hierarcy and get the URL to use from the hierarchy manager
@@ -354,7 +352,7 @@ class Renderer {
                 newView++;
             }
             renderer.loadView(newView);
-        } if(evt.key == 'p') {
+        } if(evt.key == 'ArrowUp') {
             var newRow = renderer.selectedRow;
             if(newRow > 0)
             {
@@ -366,7 +364,8 @@ class Renderer {
             }
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
             renderer.selectedRow = newRow;
-        } else if(evt.key == 'l') {
+        } else if(evt.key == 'ArrowDown') {
+            
             var newRow = renderer.selectedRow;
             if(newRow < renderer.nRows - 1)
             {
@@ -379,6 +378,7 @@ class Renderer {
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
             renderer.selectedRow = newRow;
         } else if(evt.key == 'Enter') {
+            evt.preventDefault();
             renderer.drillDown(renderer.selectedRow);
         } else if(evt.key == 'Backspace') {
             renderer.drillUpOne();
