@@ -397,6 +397,7 @@ class Renderer {
         }
 
         this.loadViewsList(() => {
+            this.selectedView = this.getViewNumById('procs');
             this.loadView(this.selectedView);
         });
     }
