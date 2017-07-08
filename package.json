@@ -21,7 +21,6 @@
   },
   "build": {
     "appId": "org.sysdig.wsysdig",
-    "category": "public.app-category.productivity",
     "dmg": {
       "contents": [
         {
