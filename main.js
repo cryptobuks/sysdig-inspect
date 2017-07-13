@@ -43,7 +43,7 @@ function createWindow () {
   //
   backend.start(g_fileName, (port, err) => {
     if(err) {
-      dialog.showErrorBox("Unable to start the application", err);
+      dialog.showErrorBox('Unable to start the application', err);
       return;
     }
 

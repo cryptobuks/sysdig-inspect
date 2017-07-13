@@ -34,7 +34,7 @@ class Backend {
   }
 
   _listViews(request, response) {
-      var args = ['--list-views'];
+      var args = ['--list-views', '-j'];
       sysdigController.run(args, response);
   }
 

@@ -1,4 +1,5 @@
 var spawn = require('child_process').spawn;
+const electron = require('electron');
 
 var g_sysdigExe;
 var g_sysdigDir;
@@ -9,12 +10,16 @@ if(process.platform === 'win32') {
     g_sysdigExe = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\csysdig.exe';
     g_sysdigDir = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\';
 } else if(process.platform === 'darwin') {
-    g_sysdigExe = __dirname + '/../sysdig/csysdig';
-    g_sysdigDir = __dirname + '/../sysdig/';
+    if(__dirname.includes('sysdig.app')) {
+//        g_sysdigExe = __dirname + '/../../sysdig/csysdig';
+//        g_sysdigDir = __dirname + '/../../sysdig/';
+        g_sysdigExe = '/Applications/wsysdig.app/Contents/Resources/sysdig/csysdig';
+        g_sysdigDir = '/Applications/wsysdig.app/Contents/Resources/sysdig/';
+    } else {
+        g_sysdigExe = __dirname + '/../sysdig/csysdig';
+        g_sysdigDir = __dirname + '/../sysdig/';
+    }
 }
-
-
-const EOF = 255;
 
 class SysdigController {
     sendError(message, response) {
