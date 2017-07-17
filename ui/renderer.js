@@ -292,7 +292,7 @@ class Renderer {
         this.loadJSON(url + '?' + encodedQueryArgs, (response) => {
             // Parse JSON string into object
             var jdata = JSON.parse(response);
-            this.renderView(jdata);
+            this.renderView(jdata[0]);
         });
     }
 

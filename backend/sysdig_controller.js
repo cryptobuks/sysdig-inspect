@@ -11,13 +11,13 @@ if(process.platform === 'win32') {
     g_sysdigDir = 'c:\\windump\\GitHub\\sysdig\\build\\Debug\\';
 } else if(process.platform === 'darwin') {
     if(__dirname.includes('sysdig.app')) {
-//        g_sysdigExe = __dirname + '/../../sysdig/csysdig';
-//        g_sysdigDir = __dirname + '/../../sysdig/';
         g_sysdigExe = '/Applications/wsysdig.app/Contents/Resources/sysdig/csysdig';
         g_sysdigDir = '/Applications/wsysdig.app/Contents/Resources/sysdig/';
     } else {
-        g_sysdigExe = __dirname + '/../sysdig/csysdig';
-        g_sysdigDir = __dirname + '/../sysdig/';
+        g_sysdigExe = '/Users/loris/git/sysdig/build/userspace/sysdig/csysdig';
+        g_sysdigDir = '/Users/loris/git/sysdig/build/userspace/sysdig';
+//        g_sysdigExe = __dirname + '/../sysdig/csysdig';
+//        g_sysdigDir = __dirname + '/../sysdig/';
     }
 }
 
