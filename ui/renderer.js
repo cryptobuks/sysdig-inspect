@@ -255,13 +255,17 @@ class Renderer {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadViewsList(callback) {
-        this.loadJSON('/capture/views', (response) => {
-            var jdata = JSON.parse(response);
-            this.renderViewsList(jdata);
-            callback();
+        oboe('/capture/views')
+            .done((jdata) => {
+                this.renderViewsList(jdata);
+                callback();
+            })
+            .fail((errorReport) => {
+                // poor man's error handling
+                if(errorReport.statusCode !== undefined) {
+                    alert(errorReport.jsonBody.reason);
+                }
         });
-//        this.renderViewsList(g_views);
-//        callback();
     }
 
     loadView(viewNum) {
@@ -289,11 +293,30 @@ class Renderer {
 
         var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
 
-        this.loadJSON(url + '?' + encodedQueryArgs, (response) => {
-            // Parse JSON string into object
-            var jdata = JSON.parse(response);
-            this.renderView(jdata[0]);
+        // this.loadJSON(url + '?' + encodedQueryArgs, (response) => {
+        //     // Parse JSON string into object
+        //     var jdata = JSON.parse(response);
+        //     this.renderView(jdata[0]);
+        // });
+
+        oboe(url + '?' + encodedQueryArgs)
+            .node('slices.*', (jdata) => {
+                    var el = document.getElementById('status');
+                    var prstr = 'done';
+                    if(jdata.progress < 100) {
+                        el.innerHTML = '<b>Progress: </b>' + jdata.progress;
+                    } else {
+                        el.innerHTML = '<b>Progress: </b>done';
+                        this.renderView(jdata);
+                    }
+            })
+            .fail(function(errorReport) {
+                if(errorReport.statusCode !== undefined) {
+                    // poor man's error handling
+                    alert(errorReport.jsonBody.reason);
+                }
         });
+
     }
 
     getViewNumById(id) {

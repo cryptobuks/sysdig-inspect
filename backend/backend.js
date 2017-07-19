@@ -3,6 +3,7 @@ const net = require('net')
 const express = require('express')
 const sysdigController = require('./sysdig_controller.js')
 var path = require("path");
+var fs = require("fs");
 
 var baseport = 3000;
 
@@ -73,15 +74,26 @@ class Backend {
       app.get('/capture/:fileName/*/:view', (request, response) => {
         this._getView(request, response)
       });
-          
+
       app.get('/*', (request, response) => {
         var url = request.url;
 
         if(url === '/') {
-          url = 'index.html';
+          url = '/index.html';
         }
 
-        response.sendFile(url, { root: __dirname + '/../ui' });
+        var absPath = path.resolve(__dirname, '../ui', url.substring(1));
+        fs.exists(absPath, function(exists) { 
+          if (exists) { 
+            response.sendFile(url, { root: __dirname + '/../ui' });
+          } else {
+            var resBody = {reason: 'not found'};
+
+            response.status(404);
+            response.send(JSON.stringify(resBody));
+            response.end();
+          }
+        }); 
       });
   }
 

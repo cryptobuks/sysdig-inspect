@@ -44,7 +44,7 @@ class SysdigController {
         this.prc.stdin.setEncoding('utf8');
 
         this.prc.stdout.on('data', (data) => {
-            response.write(data);                
+            response.write(data);
         });
 
         this.prc.stderr.on('data', (data) => {
