@@ -20,18 +20,8 @@
             ],
             "env": {},
             "console": "internalConsole",
+            "protocol": "legacy",
             "sourceMaps": false
-        },
-        {
-            "name": "Attach",
-            "type": "node",
-            "request": "attach",
-            "port": 5858,
-            "address": "localhost",
-            "restart": false,
-            "sourceMaps": false,
-            "localRoot": "${workspaceRoot}",
-            "remoteRoot": null
         }
     ]
 }
