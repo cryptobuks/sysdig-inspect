@@ -11,9 +11,10 @@ var g_views = [
 ];
 
 class HierarchyManager {
-    constructor() {
+    constructor(userFilter) {
         this.current = {'drillDownInfo': {rowNum: 0}};
         this.list = [];
+        this.userFilter = userFilter;
     }
 
     getHierarchyDepth() {
@@ -74,8 +75,19 @@ class HierarchyManager {
             drillDownStr += '/';
         }
 
+        var flt;
+        if(this.userFilter === undefined) {
+            flt = view.drillDownInfo.filter;
+        } else {
+            if(view.drillDownInfo.filter == undefined) {
+                flt = this.userFilter;
+            } else {
+                flt = '(' + this.userFilter + ') and (' + view.drillDownInfo.filter + ')';
+            }
+        }
+
         var currentStr = encodeURIComponent(JSON.stringify({id: view.details.id, 
-            filter: view.drillDownInfo.filter}));
+            filter: flt}));
 
         return '/capture/' + encodedFileName + '/' + drillDownStr + currentStr;
     }
@@ -92,7 +104,7 @@ class HierarchyManager {
             var ddview = this.list[j].details;
 
             el.innerHTML += 
-                '<a href="#" onclick="renderer.drillUp(' + j + ')">' + 
+                '<a href="#" onclick="g_renderer.drillUp(' + j + ')">' + 
                 ddview.name +
                 '</a>' + ' / ';
         }
@@ -105,7 +117,7 @@ class HierarchyManager {
 ///////////////////////////////////////////////////////////////////////////////
 // Renderer of the csysdig like UI page
 ///////////////////////////////////////////////////////////////////////////////
-class Renderer {
+class RendererDrillDown {
     constructor() {
         this.urlBase = '';
         this.port = 0;
@@ -114,7 +126,7 @@ class Renderer {
         this.nRows = 0;
         this.fileName = g_defaultFileName;
         this.views = undefined;
-        this.hierarchyManager = new HierarchyManager();
+        this.hierarchyManager = null;
         this.curViewData = undefined;
     }
 
@@ -165,13 +177,13 @@ class Renderer {
             var view = jdata[j];
 
             div.innerHTML = div.innerHTML + 
-                ('<div id="v_' + j + '"><a href="#" onclick="renderer.loadView(' + j + ')">' + view.name + '</a></div');
+                ('<div id="v_' + j + '"><a href="#" onclick="g_renderer.loadView(' + j + ')">' + view.name + '</a></div');
 
             //
             // While we're here, select the root view
             //
             // if(view.isRoot) {
-            //     renderer.selectedView = j;
+            //     g_renderer.selectedView = j;
             // }
         }
 
@@ -213,7 +225,7 @@ class Renderer {
         //
         for(var r = 0; r < rows.length; r++) {
             var rowdata = rows[r].d;
-            var row = '<tr id="r_' + r + '" onclick="renderer.drillDown(' + r + ');">';
+            var row = '<tr id="r_' + r + '" onclick="g_renderer.drillDown(' + r + ');">';
             for(var j = 0; j < rowdata.length; j++) {
                 row += '<th></b>';
                 row += rowdata[j];
@@ -337,57 +349,59 @@ class Renderer {
         evt = evt || window.event;
         if(evt.key == 'q')
         {
-            var newView = renderer.selectedView;
+            var newView = g_renderer.selectedView;
             if(newView > 0)
             {
                 newView--;
             }
         
-            renderer.loadView(newView);
+            g_renderer.loadView(newView);
         } else if(evt.key == 'a') {
-            var newView = renderer.selectedView;
-            if(newView < renderer.views.length - 1)
+            var newView = g_renderer.selectedView;
+            if(newView < g_renderer.views.length - 1)
             {
                 newView++;
             }
-            renderer.loadView(newView);
+            g_renderer.loadView(newView);
         } if(evt.key == 'ArrowUp') {
-            var newRow = renderer.selectedRow;
+            var newRow = g_renderer.selectedRow;
             if(newRow > 0)
             {
                 newRow--;
             }
         
-            if(renderer.views.length > 1) {
-                document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            if(g_renderer.views.length > 1) {
+                document.getElementById('r_' + g_renderer.selectedRow).style['background-color'] = '#FFFFFF';
             }
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
-            renderer.selectedRow = newRow;
+            g_renderer.selectedRow = newRow;
         } else if(evt.key == 'ArrowDown') {
             
-            var newRow = renderer.selectedRow;
-            if(newRow < renderer.nRows - 1)
+            var newRow = g_renderer.selectedRow;
+            if(newRow < g_renderer.nRows - 1)
             {
                 newRow++;
             }
 
-            if(renderer.views.length > 1) {
-                document.getElementById('r_' + renderer.selectedRow).style['background-color'] = '#FFFFFF';
+            if(g_renderer.views.length > 1) {
+                document.getElementById('r_' + g_renderer.selectedRow).style['background-color'] = '#FFFFFF';
             }
             document.getElementById('r_' + newRow).style['background-color'] = '#FFFF00';
-            renderer.selectedRow = newRow;
+            g_renderer.selectedRow = newRow;
         } else if(evt.key == 'Enter') {
             evt.preventDefault();
-            renderer.drillDown(renderer.selectedRow);
+            g_renderer.drillDown(g_renderer.selectedRow);
         } else if(evt.key == 'Backspace') {
-            renderer.drillUpOne();
+            g_renderer.drillUpOne();
         }
     }
 
     //
     // ENTRY POINT
     //
-    init() {
+    init(viewId, ViewFilter) {
+        this.hierarchyManager = new HierarchyManager(ViewFilter);
+
         if (this.isElecton()) {
             this.initElectron();
         } else {
@@ -430,14 +444,25 @@ class Renderer {
         // Load the data and start the visualization
         //
         this.loadViewsList(() => {
-            this.selectedView = this.getViewNumById('procs');
+            if(viewId === undefined) {
+                this.selectedView = this.getViewNumById('procs');
+            } else {
+                this.selectedView = this.getViewNumById(viewId);
+            }
+
             this.loadView(this.selectedView);
         });
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Renderer of the overview page
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 class RendererOverview {
     constructor() {
@@ -495,9 +520,10 @@ class RendererOverview {
             for(var k = 0; (k < this.tilesPerRow) && (j + k < data.length); k++) {
                 tbody += 
                 '<td id="sc' + (j + k) + '" ' +
-                'onmouseover="renderer.onMouseOverTile(' + (j + k) + ')" ' +
-                'onmouseout="renderer.onMouseOutTile(' + (j + k) + ')" ' +
-                'onclick="renderer.onClickTile(' + (j + k) + ')" ' +
+                'onmouseover="g_renderer.onMouseOverTile(' + (j + k) + ')" ' +
+                'onmouseout="g_renderer.onMouseOutTile(' + (j + k) + ')" ' +
+                'onclick="g_renderer.onClickTile(' + (j + k) + ')" ' +
+                'ondblclick="g_renderer.onDblclickTile(' + (j + k) + ')" ' +                
                 'style="border: 1px solid black;width: 20%;height:100px;text-align:center"><font face="arial" size="3">' + 
                 data[j+k].name +
                 '</font><br><br><font face="arial" size="6">' +
@@ -515,7 +541,9 @@ class RendererOverview {
 
         var pbody = '<div class="chart" id="viz' + num + '"' +
         'style="width:' + width + '%;' + 
-        'display:inline-block;vertical-align:top;"></div>';
+        'display:inline-block;vertical-align:top;"' +
+        'ondblclick="g_renderer.onDblclickTile(' + num + ')">' +                
+        '</div>';
 
         pdiv.innerHTML += pbody;
 
@@ -571,6 +599,17 @@ class RendererOverview {
         }
 
         this.renderTimelines(num, data);
+    }
+
+    onDblclickTile(num) {
+        var tile = document.getElementById('sc' + num);
+        var targetView = this.data[num].targetView;
+        var targetViewFilter = this.data[num].targetViewFilter;
+
+        g_oldRenderer = g_renderer;
+        g_renderer = new RendererDrillDown();
+        document.onkeydown = g_renderer.onKeyDown;    
+        g_renderer.init(targetView, targetViewFilter);
     }
 
     onMouseOverTile(num) {
@@ -656,9 +695,6 @@ class RendererOverview {
         pbody += '    <div id="status" style="padding: 10px;">';
         pbody += '    <b>Progress: </b>';
         pbody += '    </div>';
-        pbody += '    <div style="position:absolute;top:5px;right:0;">';
-        pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete (or breadcrumb)</b>: drill up';
-        pbody += '    </div>';
         pbody += '    <div style="width: 100%;text-align:left;">';
         pbody += '        <div id="data" style="width:50%;display:inline-block;vertical-align:top;">';
         pbody += '          <table id="dtable" style="width:100%;text-align:left;"></table>';
@@ -681,10 +717,11 @@ class RendererOverview {
 ///////////////////////////////////////////////////////////////////////////////
 // Page initialization
 ///////////////////////////////////////////////////////////////////////////////
-//var renderer = new Renderer();
-var renderer = new RendererOverview();
+//var g_renderer = new RendererDrillDown();
+var g_oldRenderer = 0;
+var g_renderer = new RendererOverview();
 
 function init() {
-    document.onkeydown = renderer.onKeyDown;    
-    renderer.init();
+    document.onkeydown = g_renderer.onKeyDown;    
+    g_renderer.init();
 }
