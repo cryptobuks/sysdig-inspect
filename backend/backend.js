@@ -36,7 +36,7 @@ class Backend {
 
   _listViews(request, response) {
       var args = ['--list-views', '-j'];
-      sysdigController.run(args, response);
+      sysdigController.runCsysdig(args, response);
   }
 
   _getView(request, response) {
@@ -59,12 +59,25 @@ class Backend {
         args.push(request.query.to);
       }
 
-      sysdigController.run(args, response);
+      sysdigController.runCsysdig(args, response);
+  }
+
+  _getIndex(request, response) {
+      var fileName = request.params.fileName;
+      response.setHeader('Content-Type', 'application/json');
+      
+      var args = ['-r', fileName, '-c', 'wsysdig_summary'];
+
+      sysdigController.runSysdig(args, response);
   }
 
   _setupRoutes(app) {
       app.get('/capture/views', (request, response) => {
         this._listViews(request, response)
+      });
+
+      app.get('/capture/:fileName/summary', (request, response) => {
+        this._getIndex(request, response)
       });
 
       app.get('/capture/:fileName/:view', (request, response) => {

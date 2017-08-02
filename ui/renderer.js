@@ -100,6 +100,9 @@ class HierarchyManager {
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Renderer of the csysdig like UI page
+///////////////////////////////////////////////////////////////////////////////
 class Renderer {
     constructor() {
         this.urlBase = '';
@@ -141,35 +144,6 @@ class Renderer {
     ///////////////////////////////////////////////////////////////////////////
     // Data communication helpers
     ///////////////////////////////////////////////////////////////////////////
-    loadJSON(url, callback, method = 'GET', payload) {
-        var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-        xobj.open(method, this.urlBase + url, true);
-        xobj.onreadystatechange = function () {
-            if(xobj.readyState == 4) {
-                if(xobj.status == "200") {
-                    callback(xobj.responseText);
-                } else {
-                    //
-                    // Poor man's error handling
-                    //
-                    var body = xobj.responseText;
-                    if(body && body !== '') {
-                        var jbody = JSON.parse(body);
-                        alert(jbody.reason);
-                    }
-                }
-            }
-        };
-
-        if (payload) {
-            xobj.send(payload);
-        }
-        else {
-            xobj.send(null);
-        }
-    }
-
     encodeQueryData(data) {
         let ret = [];
         for (let d in data)
@@ -419,6 +393,40 @@ class Renderer {
             this.urlBase = '';
         }
 
+        //
+        // Populate the page html
+        //
+        var pbody = '';
+        pbody += '<font face="arial" size="1.5">';
+        pbody += '    <div id="status" style="padding: 10px;">';
+        pbody += '    <b>Progress: </b>';
+        pbody += '    </div>';
+        pbody += '    <div>';
+        pbody += '        <p id="hierarchy" style="padding: 10px;"></p>';
+        pbody += '    </div>';
+        pbody += '    <div style="position:absolute;top:5px;right:0;">';
+        pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete (or breadcrumb)</b>: drill up';
+        pbody += '    </div>';
+        pbody += '    <div style="float: left;width: 100%;">';
+        pbody += '    <div style="float: left;width: 10%;">';
+        pbody += '        <h1>Views</h1>';
+        pbody += '        <p id="views" style="padding: 10px;"></p>';
+        pbody += '    </div>';
+        pbody += '    <div style="float: left;width: 80%;">';
+        pbody += '        <h1 id="dtitle">Data</h1>';
+        pbody += '        <div id="data">';
+        pbody += '        <table id="dtable" style="width:100%;text-align: left;"></table>';
+        pbody += '        </div>';
+        pbody += '    </div>';
+        pbody += '    </div>';
+        pbody += '</font>';
+        
+        var div = document.getElementById('page');
+        div.innerHTML = pbody;
+
+        //
+        // Load the data and start the visualization
+        //
         this.loadViewsList(() => {
             this.selectedView = this.getViewNumById('procs');
             this.loadView(this.selectedView);
@@ -426,7 +434,177 @@ class Renderer {
     }
 }
 
-var renderer = new Renderer();
+///////////////////////////////////////////////////////////////////////////////
+// Renderer of the overview page
+///////////////////////////////////////////////////////////////////////////////
+class RendererOverview {
+    constructor() {
+        this.urlBase = '';
+        this.port = 0;
+        this.fileName = g_defaultFileName;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialization support
+    ///////////////////////////////////////////////////////////////////////////
+    
+    //
+    // Check if we're running inside electron
+    //
+    isElecton() {
+        return window && window.process && window.process.type;
+    }
+
+    //
+    // This function is called only when we're running in electron.
+    // This is the place where electron specific inits go. 
+    //
+    initElectron() {
+        //
+        // Get the port where the backend is listening from the main process
+        //
+        const remote = require('electron').remote;
+        this.port = remote.getGlobal('port');
+        this.fileName = remote.getGlobal('fileName');
+        this.urlBase = 'http://localhost:' + this.port;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Data communication helpers
+    ///////////////////////////////////////////////////////////////////////////
+    encodeQueryData(data) {
+        let ret = [];
+        for (let d in data)
+            ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]));
+        return ret.join('&');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Page rendering functions
+    ///////////////////////////////////////////////////////////////////////////
+    renderGrid(data) {
+        var tb = document.getElementById('dtable');
+
+        var tbody = '';
+
+        for(var j = 0; j < data.length; j+=5) {
+            tbody += '<tr>';
+            for(var k = 0; (k < 5) && (j + k < data.length); k++) {
+                tbody += 
+                '<td id="sc' + (j + k) + '" ' +
+                'onmouseover="renderer.onMouseOverTile(' + (j + k) + ')" ' +
+                'onmouseout="renderer.onMouseOutTile(' + (j + k) + ')" ' +
+                'style="border: 1px solid black;width: 20%;height:100px;text-align:center"><font face="arial" size="3">' + 
+                data[j+k].name +
+                '</font><br><br><font face="arial" size="6">' +
+                data[j+k].tot +
+                '</font></td>';
+            }
+            tbody += '</tr>';
+        }
+
+        tb.innerHTML = tbody;
+    }
+
+    onMouseOverTile(num) {
+        var tile = document.getElementById('sc' + num);
+        tile.style.backgroundColor = "#FFFF00";
+    }
+
+    onMouseOutTile(num) {
+        var tile = document.getElementById('sc' + num);
+        tile.style.backgroundColor = "#FFFFFF";
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Bakend interaction functions
+    ///////////////////////////////////////////////////////////////////////////
+    loadData() {
+        var url = '/capture/' + encodeURIComponent(this.fileName) + '/summary';
+
+        //
+        // Download the summary
+        //
+        oboe(url)
+            .node('slices.*', (jdata) => {
+                var el = document.getElementById('status');
+                var prstr = 'done';
+                if(jdata.progress < 100) {
+                    el.innerHTML = '<b>Progress: </b>' + Math.floor(jdata.progress * 100) / 100;
+                } else {
+                    el.innerHTML = '<b>Progress: </b>done';
+                    if('data' in jdata) {
+                        this.renderGrid(jdata.data);
+                    }
+                }
+            })
+            .fail(function(errorReport) {
+                if(errorReport.statusCode !== undefined) {
+                    // poor man's error handling
+                    alert(errorReport.jsonBody.reason);
+                }
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Keyboard handler
+    ///////////////////////////////////////////////////////////////////////////////
+    onKeyDown(evt) {
+        evt = evt || window.event;
+        if(evt.key == 'q')
+        {
+            var a = 0;
+        }
+    }
+
+    //
+    // ENTRY POINT
+    //
+    init() {
+        if (this.isElecton()) {
+            this.initElectron();
+        } else {
+            this.port = location.port;
+            this.urlBase = '';
+        }
+
+        //
+        // Populate the page html
+        //
+        var pbody = '';
+        pbody += '<font face="arial" size="1.5">';
+        pbody += '    <div id="status" style="padding: 10px;">';
+        pbody += '    <b>Progress: </b>';
+        pbody += '    </div>';
+        pbody += '    <div>';
+        pbody += '        <p id="hierarchy" style="padding: 10px;"></p>';
+        pbody += '    </div>';
+        pbody += '    <div style="position:absolute;top:5px;right:0;">';
+        pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete (or breadcrumb)</b>: drill up';
+        pbody += '    </div>';
+        pbody += '    <div style="float: left;width: 100%">';
+        pbody += '        <div id="data">';
+        pbody += '        <table id="dtable" style="width:100%;text-align: left;">';
+        pbody += '        </table>';
+        pbody += '        </div>';
+        pbody += '    </div>';
+        pbody += '</font>';
+        
+        var div = document.getElementById('page');
+        div.innerHTML = pbody;
+
+        //
+        // Load the data and start the visualization
+        //
+        this.loadData();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Page initialization
+///////////////////////////////////////////////////////////////////////////////
+//var renderer = new Renderer();
+var renderer = new RendererOverview();
 
 function init() {
     document.onkeydown = renderer.onKeyDown;    
