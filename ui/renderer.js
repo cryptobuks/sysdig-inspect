@@ -1,6 +1,8 @@
 var g_defaultFileName = 'lo.scap';
 const MAX_N_ROWS = 30;
 const FILTER_TEMPLATE_MAGIC = '@#$f1CA^&;';
+const g_palette = ['steelblue', 'Gold', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green'];
+var g_lastPalettePick = 0;
 
 var g_views = [
     {name : 'Directories', id: 'directories', 'drilldownTarget': 'files'},
@@ -442,6 +444,7 @@ class RendererOverview {
         this.urlBase = '';
         this.port = 0;
         this.fileName = g_defaultFileName;
+        this.tilesPerRow = 4;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -487,17 +490,18 @@ class RendererOverview {
 
         var tbody = '';
 
-        for(var j = 0; j < data.length; j+=5) {
+        for(var j = 0; j < data.length; j+=this.tilesPerRow) {
             tbody += '<tr>';
-            for(var k = 0; (k < 5) && (j + k < data.length); k++) {
+            for(var k = 0; (k < this.tilesPerRow) && (j + k < data.length); k++) {
                 tbody += 
                 '<td id="sc' + (j + k) + '" ' +
                 'onmouseover="renderer.onMouseOverTile(' + (j + k) + ')" ' +
                 'onmouseout="renderer.onMouseOutTile(' + (j + k) + ')" ' +
+                'onclick="renderer.onClickTile(' + (j + k) + ')" ' +
                 'style="border: 1px solid black;width: 20%;height:100px;text-align:center"><font face="arial" size="3">' + 
                 data[j+k].name +
                 '</font><br><br><font face="arial" size="6">' +
-                data[j+k].tot +
+                data[j+k].data.tot +
                 '</font></td>';
             }
             tbody += '</tr>';
@@ -506,14 +510,89 @@ class RendererOverview {
         tb.innerHTML = tbody;
     }
 
+    renderTimeline(num, data, width) {
+        var pdiv = document.getElementById('vizs');
+
+        var pbody = '<div class="chart" id="viz' + num + '"' +
+        'style="width:' + width + '%;' + 
+        'display:inline-block;vertical-align:top;"></div>';
+
+        pdiv.innerHTML += pbody;
+
+        var timeline = data.timeLine;
+
+        var x = d3.scale.linear()
+            .domain([0, data.max])
+            .range([0, 99]);
+
+        d3.select('#viz' + num)
+            .selectAll('div')
+            .data(timeline)
+            .enter().append('div')
+            .style('width', function(d) { 
+                return x(d.v) + '%'; 
+            })
+            .style('background-color', data.col)
+            ;
+    }
+
+    renderTimelines() {
+        var pdiv = document.getElementById('vizs');
+        pdiv.innerHTML = '';
+        var width = 25;
+        if(this.data.length > 4) {
+            width = 100 / this.data.length;
+        }
+        
+        for(var j = 0; j < this.data.length; j++) {
+            var data = this.data[j].data;
+            if('col' in data) {
+                this.renderTimeline(j, data, width);
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // User interaction methods
+    ///////////////////////////////////////////////////////////////////////////
+    onClickTile(num) {
+        var tile = document.getElementById('sc' + num);
+        tile.style.backgroundColor = "#FFFFFF";
+        
+        var data = this.data[num].data;
+        
+        // Assign a color to this tile and apply it
+        if('col' in data) {
+            delete data.col;
+        } else {
+            data.col = g_palette[g_lastPalettePick];
+            g_lastPalettePick++;
+            tile.style.backgroundColor = data.col;
+        }
+
+        this.renderTimelines(num, data);
+    }
+
     onMouseOverTile(num) {
         var tile = document.getElementById('sc' + num);
-        tile.style.backgroundColor = "#FFFF00";
+
+        var data = this.data[num].data;
+        if('col' in data) {
+            tile.style.backgroundColor = data.col;
+        } else {
+            tile.style.backgroundColor = "#FFFF00";
+        }
     }
 
     onMouseOutTile(num) {
         var tile = document.getElementById('sc' + num);
-        tile.style.backgroundColor = "#FFFFFF";
+
+        var data = this.data[num].data;
+        if('col' in data) {
+            tile.style.backgroundColor = data.col;
+        } else {
+            tile.style.backgroundColor = "#FFFFFF";
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -534,6 +613,7 @@ class RendererOverview {
                 } else {
                     el.innerHTML = '<b>Progress: </b>done';
                     if('data' in jdata) {
+                        this.data = jdata.data;
                         this.renderGrid(jdata.data);
                     }
                 }
@@ -576,23 +656,21 @@ class RendererOverview {
         pbody += '    <div id="status" style="padding: 10px;">';
         pbody += '    <b>Progress: </b>';
         pbody += '    </div>';
-        pbody += '    <div>';
-        pbody += '        <p id="hierarchy" style="padding: 10px;"></p>';
-        pbody += '    </div>';
         pbody += '    <div style="position:absolute;top:5px;right:0;">';
         pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete (or breadcrumb)</b>: drill up';
         pbody += '    </div>';
-        pbody += '    <div style="float: left;width: 100%">';
-        pbody += '        <div id="data">';
-        pbody += '        <table id="dtable" style="width:100%;text-align: left;">';
-        pbody += '        </table>';
+        pbody += '    <div style="width: 100%;text-align:left;">';
+        pbody += '        <div id="data" style="width:50%;display:inline-block;vertical-align:top;">';
+        pbody += '          <table id="dtable" style="width:100%;text-align:left;"></table>';
+        pbody += '        </div>';
+        pbody += '        <div id="vizs" style="width:49%;display:inline-block;vertical-align:top;">';
         pbody += '        </div>';
         pbody += '    </div>';
         pbody += '</font>';
         
         var div = document.getElementById('page');
         div.innerHTML = pbody;
-
+    
         //
         // Load the data and start the visualization
         //
