@@ -214,7 +214,12 @@ class RendererDrillDown {
         //
         var row = '<tr style="background-color: #BBBBBB;">';
         for(var j = 0; j < legend.length; j++) {
-            row += '<th>';
+            var tcol = 'BBBBBB';
+            if(j === jdata.info.sortingCol - 1) {
+                tcol = '88EEEE';
+            }
+
+            row += '<th style="background-color: #' + tcol + ';">';
             row += legend[j].name;
             row += '</th>';
         }
@@ -306,7 +311,7 @@ class RendererDrillDown {
                         if(viewSortingCol !== undefined) {
                             jdata.info.sortingCol = viewSortingCol;
                         }
-                        this.sortData(jdata, jdata.info.sortingCol);
+                        this.sortData(jdata, jdata.info.sortingCol - 1);
                         this.renderView(jdata);
                     }
             })
@@ -622,8 +627,8 @@ class RendererOverview {
 
         g_oldRenderer = g_renderer;
         g_renderer = new RendererDrillDown();
-        document.onkeydown = g_renderer.onKeyDown;    
-        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol);
+        document.onkeydown = g_renderer.onKeyDown;
+        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
     }
 
     onMouseOverTile(num) {
