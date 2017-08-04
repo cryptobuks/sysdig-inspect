@@ -32,8 +32,9 @@ class HierarchyManager {
     //
     // Drills down one level
     //
-    drillDown(newViewDetails, rowNum, filterTemplate, rowKey) {
+    drillDown(newViewDetails, rowNum, filterTemplate, rowKey, sortingCol) {
         this.current.drillDownInfo.rowNum = rowNum;
+        this.current.drillDownInfo.sortingCol = sortingCol;
         this.list.push(this.current);
 
         var filter = filterTemplate.replace(FILTER_TEMPLATE_MAGIC, rowKey);
@@ -60,7 +61,7 @@ class HierarchyManager {
     //
     // Creates the URL to send to the server
     //
-    getUrl(fileName) {
+    getUrl(fileName, sortingCol) {
         var view = this.current;
         var encodedFileName = encodeURIComponent(fileName);
         
@@ -71,7 +72,8 @@ class HierarchyManager {
 
             drillDownStr += encodeURIComponent(JSON.stringify({id: ddview.id, 
                 filter: drillDownInfo.filter, 
-                rowNum: drillDownInfo.rowNum}));
+                rowNum: drillDownInfo.rowNum,
+                sortingCol: drillDownInfo.sortingCol}));
             drillDownStr += '/';
         }
 
@@ -86,8 +88,8 @@ class HierarchyManager {
             }
         }
 
-        var currentStr = encodeURIComponent(JSON.stringify({id: view.details.id, 
-            filter: flt}));
+        var currentStr = encodeURIComponent(JSON.stringify({'id': view.details.id,
+            'filter': flt, 'sortingCol': sortingCol}));
 
         return '/capture/' + encodedFileName + '/' + drillDownStr + currentStr;
     }
@@ -256,7 +258,13 @@ class RendererDrillDown {
         });
     }
 
-    loadView(viewNum) {
+    sortData(jdata, col) {
+        jdata.data.sort(function(a, b) {
+            return b.d[col] - a.d[col];
+        })
+    }
+
+    loadView(viewNum, viewSortingCol) {
         var view = this.views[viewNum];
 
         this.selectedRow = 0;
@@ -266,7 +274,7 @@ class RendererDrillDown {
         //
         this.hierarchyManager.switch(view);
         this.hierarchyManager.render();
-        var url = this.hierarchyManager.getUrl(this.fileName);
+        var url = this.hierarchyManager.getUrl(this.fileName, 33);
 
         //
         // Render the view content
@@ -295,6 +303,10 @@ class RendererDrillDown {
                         el.innerHTML = '<b>Progress: </b>' + jdata.progress;
                     } else {
                         el.innerHTML = '<b>Progress: </b>done';
+                        if(viewSortingCol !== undefined) {
+                            jdata.info.sortingCol = viewSortingCol;
+                        }
+                        this.sortData(jdata, jdata.info.sortingCol);
                         this.renderView(jdata);
                     }
             })
@@ -324,7 +336,8 @@ class RendererDrillDown {
         this.hierarchyManager.drillDown(this.views[jnextViewNum],
             rowNum,
             this.curViewData.info.filterTemplate,
-            this.curViewData.data[rowNum].k);
+            this.curViewData.data[rowNum].k,
+            this.curViewData.info.sortingCol);
 
         this.loadView(jnextViewNum);
     }
@@ -333,7 +346,7 @@ class RendererDrillDown {
         var newView = this.hierarchyManager.drillUp(level);
         var jnextViewNum = this.getViewNumById(newView.details.id);
 
-        this.loadView(jnextViewNum);
+        this.loadView(jnextViewNum, newView.drillDownInfo.sortingCol);
         this.selectedRow = newView.drillDownInfo.rowNum;
     }
 
@@ -399,8 +412,8 @@ class RendererDrillDown {
     //
     // ENTRY POINT
     //
-    init(viewId, ViewFilter) {
-        this.hierarchyManager = new HierarchyManager(ViewFilter);
+    init(viewId, viewFilter, viewSortingCol) {
+        this.hierarchyManager = new HierarchyManager(viewFilter);
 
         if (this.isElecton()) {
             this.initElectron();
@@ -450,7 +463,7 @@ class RendererDrillDown {
                 this.selectedView = this.getViewNumById(viewId);
             }
 
-            this.loadView(this.selectedView);
+            this.loadView(this.selectedView, viewSortingCol);
         });
     }
 }
@@ -605,11 +618,12 @@ class RendererOverview {
         var tile = document.getElementById('sc' + num);
         var targetView = this.data[num].targetView;
         var targetViewFilter = this.data[num].targetViewFilter;
+        var targetViewSortingCol = this.data[num].targetViewSortingCol;
 
         g_oldRenderer = g_renderer;
         g_renderer = new RendererDrillDown();
         document.onkeydown = g_renderer.onKeyDown;    
-        g_renderer.init(targetView, targetViewFilter);
+        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol);
     }
 
     onMouseOverTile(num) {
@@ -718,8 +732,8 @@ class RendererOverview {
 // Page initialization
 ///////////////////////////////////////////////////////////////////////////////
 //var g_renderer = new RendererDrillDown();
-var g_oldRenderer = 0;
 var g_renderer = new RendererOverview();
+var g_oldRenderer = 0;
 
 function init() {
     document.onkeydown = g_renderer.onKeyDown;    
