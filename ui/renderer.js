@@ -1,7 +1,7 @@
 var g_defaultFileName = 'lo.scap';
 const MAX_N_ROWS = 30;
 const FILTER_TEMPLATE_MAGIC = '@#$f1CA^&;';
-const g_palette = ['steelblue', 'Gold', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green'];
+const g_palette = ['steelblue', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green', 'Red'];
 var g_lastPalettePick = 0;
 
 var g_views = [
@@ -488,6 +488,7 @@ class RendererOverview {
         this.port = 0;
         this.fileName = g_defaultFileName;
         this.tilesPerRow = 4;
+        this.timelineSelectStart = -1;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -560,8 +561,12 @@ class RendererOverview {
         var pbody = '<div class="chart" id="viz' + num + '"' +
         'style="width:' + width + '%;' + 
         'display:inline-block;vertical-align:top;"' +
-        'ondblclick="g_renderer.onDblclickTile(' + num + ')">' +                
-        '</div>';
+        'ondblclick="g_renderer.onDblclickTile(' + num + ')"' + 
+        'onmousedown="g_renderer.onMouseDownTimeline(event, ' + num + ')"' + 
+        'onmousemove="g_renderer.onMouseMoveTimeline(event, ' + num + ')"' + 
+        'onmouseup="g_renderer.onMouseUpTimeline(event, ' + num + ')"' + 
+        'onmouseout="g_renderer.onMouseOutTimeline(event, ' + num + ')"' + 
+        '></div>';
 
         pdiv.innerHTML += pbody;
 
@@ -571,11 +576,14 @@ class RendererOverview {
             .domain([0, data.max])
             .range([0, 99]);
 
+        var j = 0;
+
         d3.select('#viz' + num)
             .selectAll('div')
             .data(timeline)
             .enter().append('div')
             .style('width', function(d) { 
+                d.n = j++;
                 return x(d.v) + '%'; 
             })
             .style('background-color', data.col)
@@ -601,6 +609,61 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // User interaction methods
     ///////////////////////////////////////////////////////////////////////////
+    onMouseDownTimeline(event, num) {
+        this.timelineSelectStart = event.offsetY;
+    }
+
+    onMouseUpTimeline(event, num) {
+        this.timelineSelectStart = -1;
+    }
+
+    onMouseMoveTimeline(event, num) {
+        document.body.style.cursor = 'crosshair';
+        var el = document.getElementById('timestr');
+        el.style.display = 'block';
+        var startY = Math.trunc(this.timelineSelectStart / 2);
+        var curY = Math.trunc(event.offsetY / 2);
+        var firstTs = +this.data[num].data.timeLine[0].t;
+        var curTs = +this.data[num].data.timeLine[curY].t;
+
+        var deltaCur = curTs - firstTs;
+
+        if(this.timelineSelectStart == -1) {
+            el.innerHTML = '<b>Time</b>: ' + (Math.floor(deltaCur / 10000000) / 100) + 's';
+            return;
+        }
+
+        var selectStartTs = +this.data[num].data.timeLine[startY].t;
+        var deltaSelectStart = selectStartTs - firstTs;
+
+        el.innerHTML = '<b>Time</b>: from ' + (Math.floor(deltaSelectStart / 10000000) / 100) + 's to ' +
+            (Math.floor(deltaCur / 10000000) / 100);
+        
+        for(var j = 0; j < this.data.length; j++) {
+            var col = this.data[j].data.col;
+            var elmt = document.getElementById('timestr');
+            var k = 0;
+
+            d3.select('#viz' + j)
+                .selectAll('div')
+                .style('background-color', function(d) {
+                    if(k >= startY && k <= curY) {
+                        k++;
+                        return '#DDDD00';
+                    } else {
+                        k++;
+                        return col;
+                    }
+                });
+        }
+    }
+
+    onMouseOutTimeline(event, num) {
+        document.body.style.cursor = 'auto';
+        var el = document.getElementById('timestr');
+        //el.style.display = 'none';
+    }
+
     onClickTile(num) {
         var tile = document.getElementById('sc' + num);
         tile.style.backgroundColor = "#FFFFFF";
@@ -713,6 +776,9 @@ class RendererOverview {
         pbody += '<font face="arial" size="1.5">';
         pbody += '    <div id="status" style="padding: 10px;">';
         pbody += '    <b>Progress: </b>';
+        pbody += '    </div>';
+        pbody += '    <div id="timestr" style="position:absolute;top:25px;right:10px;display:none;">';
+        pbody += '        <b>Time</b>: 0 ';
         pbody += '    </div>';
         pbody += '    <div style="width: 100%;text-align:left;">';
         pbody += '        <div id="data" style="width:50%;display:inline-block;vertical-align:top;">';
