@@ -609,11 +609,47 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // User interaction methods
     ///////////////////////////////////////////////////////////////////////////
+    onClickCtextMenu(num) {
+        var targetView;
+        var targetViewFilter;
+        var targetViewSortingCol;
+
+        if(num === 2) {
+            targetView = 'files';
+            //targetViewFilter = null;
+            //targetViewSortingCol;
+        }
+
+        var flt = this.selectStartTs - this.firstTs;
+        if(targetViewFilter !== undefined) {
+            var a = 0;
+        } else {
+            targetViewFilter = 'evt.rawtime>=' + this.firstTs + ' and evt.rawtime<=' + this.selectStartTs;
+        }
+
+        g_oldRenderer = g_renderer;
+        g_renderer = new RendererDrillDown();
+        document.onkeydown = g_renderer.onKeyDown;
+        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
+    }
+
     onMouseDownTimeline(event, num) {
         this.timelineSelectStart = event.offsetY;
     }
 
     onMouseUpTimeline(event, num) {
+        if(this.timelineSelectStart != -1) {
+            var cmel = document.getElementById('cmenu');
+            cmel.style.top = event.clientY + 'px';
+            cmel.style.left = event.clientX + 'px';
+            cmel.style.display = 'inline-block';
+            cmel.innerHTML = '<b> Selection Options</b><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(1)">View Processes</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(2)"> View Files</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(3)">View Directories</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(4)">View Network Traffic</a><br>';
+        }
+
         this.timelineSelectStart = -1;
     }
 
@@ -623,21 +659,21 @@ class RendererOverview {
         el.style.display = 'block';
         var startY = Math.trunc(this.timelineSelectStart / 2);
         var curY = Math.trunc(event.offsetY / 2);
-        var firstTs = +this.data[num].data.timeLine[0].t;
+        this.firstTs = +this.data[num].data.timeLine[0].t;
         var curTs = +this.data[num].data.timeLine[curY].t;
 
-        var deltaCur = curTs - firstTs;
+        var deltaCur = curTs - this.firstTs;
 
         if(this.timelineSelectStart == -1) {
             el.innerHTML = '<b>Time</b>: ' + (Math.floor(deltaCur / 10000000) / 100) + 's';
             return;
         }
 
-        var selectStartTs = +this.data[num].data.timeLine[startY].t;
-        var deltaSelectStart = selectStartTs - firstTs;
+        this.selectStartTs = +this.data[num].data.timeLine[startY].t;
+        var deltaSelectStart = this.selectStartTs - this.firstTs;
 
         el.innerHTML = '<b>Time</b>: from ' + (Math.floor(deltaSelectStart / 10000000) / 100) + 's to ' +
-            (Math.floor(deltaCur / 10000000) / 100);
+            (Math.floor(deltaCur / 10000000) / 100) + 's';
         
         for(var j = 0; j < this.data.length; j++) {
             var col = this.data[j].data.col;
@@ -773,13 +809,14 @@ class RendererOverview {
         // Populate the page html
         //
         var pbody = '';
-        pbody += '<font face="arial" size="1.5">';
+        pbody += '<font face="arial" size="3.5">';
         pbody += '    <div id="status" style="padding: 10px;">';
         pbody += '    <b>Progress: </b>';
         pbody += '    </div>';
-        pbody += '    <div id="timestr" style="position:absolute;top:25px;right:10px;display:none;">';
+        pbody += '    <div id="timestr" style="position:fixed;top:25px;right:10px;display:none;">';
         pbody += '        <b>Time</b>: 0 ';
         pbody += '    </div>';
+        pbody += '    <div id="cmenu" style="position:fixed;top:300px;left:100px;background:#cccccc;display:none;border:1px solid black;"></div>';
         pbody += '    <div style="width: 100%;text-align:left;">';
         pbody += '        <div id="data" style="width:50%;display:inline-block;vertical-align:top;">';
         pbody += '          <table id="dtable" style="width:100%;text-align:left;"></table>';
