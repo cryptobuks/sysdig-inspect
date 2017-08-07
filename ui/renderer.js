@@ -614,8 +614,26 @@ class RendererOverview {
         var targetViewFilter;
         var targetViewSortingCol;
 
-        if(num === 2) {
+        if(num === 1) {
+            targetView = 'processes';
+        } else if(num === 2) {
             targetView = 'files';
+            //targetViewFilter = null;
+            //targetViewSortingCol;
+        } else if(num === 3) {
+            targetView = 'directories';
+            //targetViewFilter = null;
+            //targetViewSortingCol;
+        } else if(num === 4) {
+            targetView = 'sports';
+            //targetViewFilter = null;
+            //targetViewSortingCol;
+        } else if(num === 5) {
+            targetView = 'connections';
+            //targetViewFilter = null;
+            //targetViewSortingCol;
+        } else if(num === 6) {
+            targetView = 'spy_users';
             //targetViewFilter = null;
             //targetViewSortingCol;
         }
@@ -624,7 +642,7 @@ class RendererOverview {
         if(targetViewFilter !== undefined) {
             var a = 0;
         } else {
-            targetViewFilter = 'evt.rawtime>=' + this.firstTs + ' and evt.rawtime<=' + this.selectStartTs;
+            targetViewFilter = 'evt.rawtime>=' + this.selectStartTs + ' and evt.rawtime<=' + this.selectEndTs;
         }
 
         g_oldRenderer = g_renderer;
@@ -643,11 +661,14 @@ class RendererOverview {
             cmel.style.top = event.clientY + 'px';
             cmel.style.left = event.clientX + 'px';
             cmel.style.display = 'inline-block';
-            cmel.innerHTML = '<b> Selection Options</b><br>';
-            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(1)">View Processes</a><br>';
-            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(2)"> View Files</a><br>';
-            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(3)">View Directories</a><br>';
-            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(4)">View Network Traffic</a><br>';
+            cmel.innerHTML = '<b>&nbsp;Selection Drill Down Options&nbsp;</b><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(1)">&nbsp;Processes</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(2)">&nbsp;Files</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(3)">&nbsp;Directories</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(4)">&nbsp;Network Traffic</a><br>';
+            //cmel.innerHTML += '<hr>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(5)">&nbsp;Network Connections</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(6)">&nbsp;Spy Users</a><br>';
         }
 
         this.timelineSelectStart = -1;
@@ -660,12 +681,14 @@ class RendererOverview {
         var startY = Math.trunc(this.timelineSelectStart / 2);
         var curY = Math.trunc(event.offsetY / 2);
         this.firstTs = +this.data[num].data.timeLine[0].t;
-        var curTs = +this.data[num].data.timeLine[curY].t;
+        this.selectEndTs = +this.data[num].data.timeLine[curY].t;
+        var curVal = +this.data[num].data.timeLine[curY].v;
 
-        var deltaCur = curTs - this.firstTs;
+        var deltaCur = this.selectEndTs - this.firstTs;
 
         if(this.timelineSelectStart == -1) {
-            el.innerHTML = '<b>Time</b>: ' + (Math.floor(deltaCur / 10000000) / 100) + 's';
+            el.innerHTML = '<b>Time</b>: ' + (Math.floor(deltaCur / 10000000) / 100) + 's ' +
+            '<b>val<b>: ' + curVal;
             return;
         }
 
