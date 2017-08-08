@@ -335,7 +335,7 @@ class RendererDrillDown {
         return undefined;
     }
 
-    dig(rowNum) {
+    dig(rowNum, isEcho) {
         var dbody = '<h1 id="dtitle">Sysdig Events</h1>';
         dbody += '<code>';
         dbody += '<div><textarea id="digdata" readonly="true" style="width:100%;height:100px"></textarea></div>';
@@ -356,7 +356,12 @@ class RendererDrillDown {
         //
         // Update the hierarcy and get the URL to use from the hierarchy manager
         //
-        var view = {id: 'dig'};
+        var view;
+        if(isEcho) {
+            view = {id: 'echo'};
+        } else {
+            view = {id: 'dig'};
+        }
         this.hierarchyManager.switch(view);
         var url = this.hierarchyManager.getUrl(this.fileName, 33);
 
@@ -379,9 +384,28 @@ class RendererDrillDown {
                 }
 
                 var lines = jdata.data;
-                for(var j = 0; j <lines.length; j++) {
-                    hlines += lines[j];
-                    hlines += '\n';
+                if(view.id === 'dig') {
+                    for(var j = 0; j <lines.length; j++) {
+                        hlines += lines[j];
+                        hlines += '\n';
+                    }
+                } else {
+                    for(var j = 0; j <lines.length; j++) {
+                        var line = lines[j];
+                        var hline;
+                        if(line.d === '<') {
+                            hline = 'Read ';
+                        } else {
+                            hline = 'Write ';                            
+                        }
+
+                        hline += line.l + 'B, ';
+                        hline += 'FD=' + line.f + '\n';
+                        hline += line.v;
+                        hline += '\n\n';
+                        
+                        hlines += hline;
+                    }
                 }
 
                 ddiv.innerHTML = hlines;
@@ -480,7 +504,9 @@ class RendererDrillDown {
             evt.preventDefault();
             g_renderer.drillDown(g_renderer.selectedRow);
         } else if(evt.key == 'd') {
-            g_renderer.dig(g_renderer.selectedRow);
+            g_renderer.dig(g_renderer.selectedRow, false);
+        } else if(evt.key == 'e') {
+            g_renderer.dig(g_renderer.selectedRow, true);
         } else if(evt.key == 'Backspace') {
             g_renderer.drillUpOne();
         }
@@ -936,8 +962,8 @@ class RendererOverview {
 ///////////////////////////////////////////////////////////////////////////////
 // Page initialization
 ///////////////////////////////////////////////////////////////////////////////
-var g_renderer = new RendererDrillDown();
-//var g_renderer = new RendererOverview();
+//var g_renderer = new RendererDrillDown();
+var g_renderer = new RendererOverview();
 var g_oldRenderer = 0;
 
 function init() {
