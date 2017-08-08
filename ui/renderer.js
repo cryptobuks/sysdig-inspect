@@ -355,8 +355,12 @@ class RendererDrillDown {
         this.selectedRow = newView.drillDownInfo.rowNum;
     }
 
-    drillUpOne() {
+    drillUpOne() {        
         var newLevel = this.hierarchyManager.getHierarchyDepth();
+        if(newLevel <= 0) {
+            return;
+        }
+
         this.drillUp(newLevel - 1);
     }
 
@@ -409,6 +413,8 @@ class RendererDrillDown {
         } else if(evt.key == 'Enter') {
             evt.preventDefault();
             g_renderer.drillDown(g_renderer.selectedRow);
+        } else if(evt.key == 'd') {
+            g_renderer.drillDown(g_renderer.selectedRow);
         } else if(evt.key == 'Backspace') {
             g_renderer.drillUpOne();
         }
@@ -439,7 +445,7 @@ class RendererDrillDown {
         pbody += '        <p id="hierarchy" style="padding: 10px;"></p>';
         pbody += '    </div>';
         pbody += '    <div style="position:absolute;top:5px;right:0;">';
-        pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete (or breadcrumb)</b>: drill up';
+        pbody += '        <b>q/a</b>: change view <b>up/down</b>: change line selection <b>Enter</b>: drill down <b>Delete</b>: drill up <b>e</b>: echo <b>d</b>: dig&nbsp;&nbsp;&nbsp;';
         pbody += '    </div>';
         pbody += '    <div style="float: left;width: 100%;">';
         pbody += '    <div style="float: left;width: 10%;">';
@@ -862,8 +868,8 @@ class RendererOverview {
 ///////////////////////////////////////////////////////////////////////////////
 // Page initialization
 ///////////////////////////////////////////////////////////////////////////////
-//var g_renderer = new RendererDrillDown();
-var g_renderer = new RendererOverview();
+var g_renderer = new RendererDrillDown();
+//var g_renderer = new RendererOverview();
 var g_oldRenderer = 0;
 
 function init() {
