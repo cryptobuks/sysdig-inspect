@@ -719,23 +719,21 @@ class RendererOverview {
         } else if(num === 2) {
             targetView = 'files';
             //targetViewFilter = null;
-            //targetViewSortingCol;
+            targetViewSortingCol = 2;
         } else if(num === 3) {
             targetView = 'directories';
             //targetViewFilter = null;
-            //targetViewSortingCol;
+            targetViewSortingCol = 2;
         } else if(num === 4) {
             targetView = 'sports';
             //targetViewFilter = null;
-            //targetViewSortingCol;
+            targetViewSortingCol = 4;
         } else if(num === 5) {
             targetView = 'connections';
             //targetViewFilter = null;
-            //targetViewSortingCol;
+            targetViewSortingCol = 8;
         } else if(num === 6) {
             targetView = 'spy_users';
-            //targetViewFilter = null;
-            //targetViewSortingCol;
         }
 
         var flt = this.selectStartTs - this.firstTs;
@@ -743,6 +741,10 @@ class RendererOverview {
             var a = 0;
         } else {
             targetViewFilter = 'evt.rawtime>=' + this.selectStartTs + ' and evt.rawtime<=' + this.selectEndTs;
+        }
+
+        if(targetViewSortingCol === undefined) {
+            targetViewSortingCol = 0;
         }
 
         g_oldRenderer = g_renderer;
