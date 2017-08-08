@@ -272,6 +272,14 @@ class RendererDrillDown {
     loadView(viewNum, viewSortingCol) {
         var view = this.views[viewNum];
 
+        //
+        // Make sure to make the dig window disappear
+        //
+        document.getElementById('dig').innerHTML= '';
+        
+        //
+        // Reset the row selection
+        //
         this.selectedRow = 0;
         
         //
@@ -294,12 +302,6 @@ class RendererDrillDown {
 
         var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
 
-        // this.loadJSON(url + '?' + encodedQueryArgs, (response) => {
-        //     // Parse JSON string into object
-        //     var jdata = JSON.parse(response);
-        //     this.renderView(jdata[0]);
-        // });
-
         oboe(url + '?' + encodedQueryArgs)
             .node('slices.*', (jdata) => {
                     var el = document.getElementById('status');
@@ -321,7 +323,6 @@ class RendererDrillDown {
                     alert(errorReport.jsonBody.reason);
                 }
         });
-
     }
 
     getViewNumById(id) {
@@ -332,6 +333,71 @@ class RendererDrillDown {
         }
 
         return undefined;
+    }
+
+    dig(rowNum) {
+        var dbody = '<h1 id="dtitle">Sysdig Events</h1>';
+        dbody += '<code>';
+        dbody += '<div><textarea id="digdata" readonly="true" style="width:100%;height:100px"></textarea></div>';
+        dbody += '</code>';
+        var div = document.getElementById('dig');
+        div.innerHTML = dbody;
+
+        //
+        // Simulate a drill down to get the required URL from the hierarchy
+        // manager
+        //
+        this.hierarchyManager.drillDown(undefined,
+            rowNum,
+            this.curViewData.info.filterTemplate,
+            this.curViewData.data[rowNum].k,
+            this.curViewData.info.sortingCol);
+
+        //
+        // Update the hierarcy and get the URL to use from the hierarchy manager
+        //
+        var view = {id: 'dig'};
+        this.hierarchyManager.switch(view);
+        var url = this.hierarchyManager.getUrl(this.fileName, 33);
+
+        //
+        // Load the data
+        //
+        //var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
+
+        oboe(url /*+ '?' + encodedQueryArgs*/)
+            .node('slices.*', (jdata) => {
+                var el = document.getElementById('status');
+                var ddiv = document.getElementById('digdata');
+                var hlines = ddiv.innerHTML;
+
+                var prstr = 'done';
+                if(jdata.progress < 100) {
+                    el.innerHTML = '<b>Progress: </b>' + jdata.progress;
+                } else {
+                    el.innerHTML = '<b>Progress: </b>done';
+                }
+
+                var lines = jdata.data;
+                for(var j = 0; j <lines.length; j++) {
+                    hlines += lines[j];
+                    hlines += '\n';
+                }
+
+                ddiv.innerHTML = hlines;
+            })
+            .fail(function(errorReport) {
+                if(errorReport.statusCode !== undefined) {
+                    // poor man's error handling
+                    alert(errorReport.jsonBody.reason);
+                }
+        });
+
+        //
+        // Data loaded. Drill up to restore the hierachy manager state.
+        //
+        var newLevel = this.hierarchyManager.getHierarchyDepth();
+        var newView = this.hierarchyManager.drillUp(newLevel - 1);
     }
 
     drillDown(rowNum) {
@@ -355,7 +421,7 @@ class RendererDrillDown {
         this.selectedRow = newView.drillDownInfo.rowNum;
     }
 
-    drillUpOne() {        
+    drillUpOne() {
         var newLevel = this.hierarchyManager.getHierarchyDepth();
         if(newLevel <= 0) {
             return;
@@ -414,7 +480,7 @@ class RendererDrillDown {
             evt.preventDefault();
             g_renderer.drillDown(g_renderer.selectedRow);
         } else if(evt.key == 'd') {
-            g_renderer.drillDown(g_renderer.selectedRow);
+            g_renderer.dig(g_renderer.selectedRow);
         } else if(evt.key == 'Backspace') {
             g_renderer.drillUpOne();
         }
@@ -456,6 +522,8 @@ class RendererDrillDown {
         pbody += '        <h1 id="dtitle">Data</h1>';
         pbody += '        <div id="data">';
         pbody += '        <table id="dtable" style="width:100%;text-align: left;"></table>';
+        pbody += '        </div>';
+        pbody += '        <div id="dig">';
         pbody += '        </div>';
         pbody += '    </div>';
         pbody += '    </div>';
