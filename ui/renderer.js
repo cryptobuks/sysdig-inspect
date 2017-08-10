@@ -38,6 +38,9 @@ class HierarchyManager {
         this.list.push(this.current);
 
         var filter = filterTemplate.replace(FILTER_TEMPLATE_MAGIC, rowKey);
+        if(newViewDetails !== undefined && newViewDetails.filter !== undefined && newViewDetails.filter !== '') {
+            filter = '(' + filter + ') and (' + newViewDetails.filter + ')'; 
+        }
 
         this.current = {
             details: newViewDetails, 
@@ -512,9 +515,9 @@ class RendererDrillDown {
         }
     }
 
-    //
+    ///////////////////////////////////////////////////////////////////////////////
     // ENTRY POINT
-    //
+    ///////////////////////////////////////////////////////////////////////////////
     init(viewId, viewFilter, viewSortingCol) {
         this.hierarchyManager = new HierarchyManager(viewFilter);
 
@@ -629,6 +632,17 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // Page rendering functions
     ///////////////////////////////////////////////////////////////////////////
+    numToReadableStr(n) {
+        if(n > (1024 * 1024 * 1024)) {
+            return (Math.floor((n / (1024 * 1024 * 1024)) * 10) / 10) + 'G';
+        } else if(n > (1024 * 1024)) {
+            return (Math.floor((n / (1024 * 1024)) * 10) / 10) + 'M';
+        } else if(n > 1024) {
+            return (Math.floor((n / 1024) * 10) / 10) + 'K';
+        }
+        return n;
+    }
+
     renderGrid(data) {
         var tb = document.getElementById('dtable');
 
@@ -646,7 +660,7 @@ class RendererOverview {
                 'style="border: 1px solid black;width: 20%;height:100px;text-align:center"><font face="arial" size="3">' + 
                 data[j+k].name +
                 '</font><br><br><font face="arial" size="6">' +
-                data[j+k].data.tot +
+                this.numToReadableStr(data[j+k].data.tot) +
                 '</font></td>';
             }
             tbody += '</tr>';
@@ -909,7 +923,7 @@ class RendererOverview {
     }
 
     ///////////////////////////////////////////////////////////////////////////////
-    // Keyboard handler
+    // Keyboard hooks
     ///////////////////////////////////////////////////////////////////////////////
     onKeyDown(evt) {
         evt = evt || window.event;
@@ -919,9 +933,9 @@ class RendererOverview {
         }
     }
 
-    //
+    ///////////////////////////////////////////////////////////////////////////////
     // ENTRY POINT
-    //
+    ///////////////////////////////////////////////////////////////////////////////
     init() {
         if (this.isElecton()) {
             this.initElectron();
