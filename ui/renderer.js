@@ -4,6 +4,17 @@ const FILTER_TEMPLATE_MAGIC = '@#$f1CA^&;';
 const g_palette = ['steelblue', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green', 'Red'];
 var g_lastPalettePick = 0;
 
+//
+// Check if we're running inside electron
+//
+function isElectron() {
+    return window && window.process && window.process.type;
+}
+
+if(isElectron()) {
+    d3 = require('./deps/d3.v3.min.js');
+}
+
 var g_views = [
     {name : 'Directories', id: 'directories', 'drilldownTarget': 'files'},
     {name : 'Files', id: 'files', 'drilldownTarget': 'procs'},
@@ -140,13 +151,6 @@ class RendererDrillDown {
     ///////////////////////////////////////////////////////////////////////////
     
     //
-    // Check if we're running inside electron
-    //
-    isElecton() {
-        return window && window.process && window.process.type;
-    }
-
-    //
     // This function is called only when we're running in electron.
     // This is the place where electron specific inits go. 
     //
@@ -253,7 +257,7 @@ class RendererDrillDown {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadViewsList(callback) {
-        oboe('/capture/views')
+        oboe(this.urlBase + '/capture/views')
             .done((jdata) => {
                 this.renderViewsList(jdata);
                 callback();
@@ -305,7 +309,7 @@ class RendererDrillDown {
 
         var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
 
-        oboe(url + '?' + encodedQueryArgs)
+        oboe(this.urlBase + url + '?' + encodedQueryArgs)
             .node('slices.*', (jdata) => {
                     var el = document.getElementById('status');
                     var prstr = 'done';
@@ -521,7 +525,7 @@ class RendererDrillDown {
     init(viewId, viewFilter, viewSortingCol) {
         this.hierarchyManager = new HierarchyManager(viewFilter);
 
-        if (this.isElecton()) {
+        if(isElectron()) {
             this.initElectron();
         } else {
             this.port = location.port;
@@ -597,13 +601,6 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // Initialization support
     ///////////////////////////////////////////////////////////////////////////
-    
-    //
-    // Check if we're running inside electron
-    //
-    isElecton() {
-        return window && window.process && window.process.type;
-    }
 
     //
     // This function is called only when we're running in electron.
@@ -895,7 +892,7 @@ class RendererOverview {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadData() {
-        var url = '/capture/' + encodeURIComponent(this.fileName) + '/summary';
+        var url = this.urlBase + '/capture/' + encodeURIComponent(this.fileName) + '/summary';
 
         //
         // Download the summary
@@ -937,7 +934,7 @@ class RendererOverview {
     // ENTRY POINT
     ///////////////////////////////////////////////////////////////////////////////
     init() {
-        if (this.isElecton()) {
+        if (isElectron()) {
             this.initElectron();
         } else {
             this.port = location.port;
