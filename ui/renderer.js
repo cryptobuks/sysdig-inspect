@@ -140,6 +140,34 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // User interaction methods
     ///////////////////////////////////////////////////////////////////////////
+    dig(filter, isEcho, forcedTitle) {
+        var view;
+        var title;
+        if(isEcho) {
+            view = {id: 'echo'};
+            title = 'Data buffers for time selection';
+        } else {
+            view = {id: 'dig'};
+            title = 'Sysdig Events for time selection';
+        }
+        
+        if(forcedTitle !== undefined) {
+            title = forcedTitle;
+        }
+
+        this.hierarchyManager = new HierarchyManager(filter);
+        this.hierarchyManager.switch(view);
+        var url = this.hierarchyManager.getUrl(this.fileName, 33);
+
+        //
+        // Launch the sysdig viewer
+        //
+        g_oldRenderer = g_renderer;
+        g_renderer = new RendererSysdig();
+        document.onkeydown = g_renderer.onKeyDown;
+        g_renderer.init(this.hierarchyManager, this.fileName, undefined, isEcho, title);
+    }
+
     onClickCtextMenu(num) {
         var targetView;
         var targetViewFilter;
@@ -169,9 +197,14 @@ class RendererOverview {
 
         var flt = this.selectStartTs - this.firstTs;
         if(targetViewFilter !== undefined) {
-            var a = 0;
+            targetViewFilter = '(evt.type != switch and evt.rawtime>=' + this.selectStartTs + ' and evt.rawtime<=' + this.selectEndTs + ') and (' + targetViewFilter + ')';
         } else {
-            targetViewFilter = 'evt.rawtime>=' + this.selectStartTs + ' and evt.rawtime<=' + this.selectEndTs;
+            targetViewFilter = 'evt.type != switch and evt.rawtime>=' + this.selectStartTs + ' and evt.rawtime<=' + this.selectEndTs;
+        }
+
+        if(num === 7 || num === 8) {
+            this.dig(targetViewFilter, num === 8);
+            return;
         }
 
         if(targetViewSortingCol === undefined) {
@@ -199,9 +232,11 @@ class RendererOverview {
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(2)">&nbsp;Files</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(3)">&nbsp;Directories</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(4)">&nbsp;Network Traffic</a><br>';
-            //cmel.innerHTML += '<hr>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(5)">&nbsp;Network Connections</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(6)">&nbsp;Spy Users</a><br>';
+            cmel.innerHTML += '<hr>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(7)">&nbsp;Dig</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(8)">&nbsp;Echo</a><br>';
         }
 
         this.timelineSelectStart = -1;
@@ -279,11 +314,16 @@ class RendererOverview {
         var targetView = this.data[num].targetView;
         var targetViewFilter = this.data[num].targetViewFilter;
         var targetViewSortingCol = this.data[num].targetViewSortingCol;
+        var targetViewTitle = this.data[num].targetViewTitle;
 
-        g_oldRenderer = g_renderer;
-        g_renderer = new RendererDrillDown();
-        document.onkeydown = g_renderer.onKeyDown;
-        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
+        if(targetView === 'dig') {
+            this.dig(targetViewFilter, false, targetViewTitle);
+        } else {
+            g_oldRenderer = g_renderer;
+            g_renderer = new RendererDrillDown();
+            document.onkeydown = g_renderer.onKeyDown;
+            g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
+        }
     }
 
     onMouseOverTile(num) {
@@ -395,8 +435,8 @@ class RendererOverview {
 ///////////////////////////////////////////////////////////////////////////////
 // Page initialization
 ///////////////////////////////////////////////////////////////////////////////
-var g_renderer = new RendererDrillDown();
-//var g_renderer = new RendererOverview();
+var g_renderer = new RendererOverview();
+//var g_renderer = new RendererDrillDown();
 //var g_renderer = new RendererSysdig();
 
 var g_oldRenderer = 0;
