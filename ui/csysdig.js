@@ -261,9 +261,11 @@ class RendererDrillDown {
     }
 
     sortData(jdata, col) {
-        jdata.data.sort(function(a, b) {
-            return b.d[col] - a.d[col];
-        })
+        if(data in jdata) {
+            jdata.data.sort(function(a, b) {
+                return b.d[col] - a.d[col];
+            })
+        }
     }
 
     loadView(viewNum, viewSortingCol) {

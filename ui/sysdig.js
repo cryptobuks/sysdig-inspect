@@ -156,9 +156,7 @@ class RendererSysdig {
         pbody += '      <div id="title"></div><br>';
         pbody += '      Filter <input id="digfilter" type="text" style="width: 80%;"><button type="button" onclick="g_renderer.onClickGoBtn()">Go</button>';
         pbody += '      <br><br>';
-        pbody += '      <code>';
-        pbody += '          <div><textarea id="digdata" readonly="true" style="width:80%;height:600px"></textarea></div>';
-        pbody += '      </code>';
+        pbody += '          <div><textarea id="digdata" readonly="true" style="width:80%;height:600px;font-family:courier new;white-space:pre"></textarea></div>';
         pbody += '    </div>';
         pbody += '</font>';
         
