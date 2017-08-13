@@ -233,7 +233,7 @@ class RendererOverview {
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(3)">&nbsp;Directories</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(4)">&nbsp;Network Traffic</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(5)">&nbsp;Network Connections</a><br>';
-            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(6)">&nbsp;Spy Users</a><br>';
+            cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(6)">&nbsp;Ececuted Commands</a><br>';
             cmel.innerHTML += '<hr>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(7)">&nbsp;Dig</a><br>';
             cmel.innerHTML += '<a href="#" onclick="g_renderer.onClickCtextMenu(8)">&nbsp;Echo</a><br>';
