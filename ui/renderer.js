@@ -318,6 +318,8 @@ class RendererOverview {
 
         if(targetView === 'dig') {
             this.dig(targetViewFilter, false, targetViewTitle);
+        } else if(targetView === 'echo') {
+            this.dig(targetViewFilter, true, targetViewTitle);
         } else {
             g_oldRenderer = g_renderer;
             g_renderer = new RendererDrillDown();

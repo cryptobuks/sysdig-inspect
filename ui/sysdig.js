@@ -90,6 +90,12 @@ class RendererSysdig {
                         }
 
                         hline += line.l + 'B, ';
+                        hline += 'PROC=' + line.p + ', ';
+                        if('c' in line) {
+                            hline += 'CONTAINER=' + line.c + ', ';
+                        } else {
+                            hline += 'CONTAINER=host, ';                            
+                        }
                         hline += 'FD=' + line.f + '\n';
                         hline += line.v;
                         hline += '\n\n';
