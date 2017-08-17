@@ -368,8 +368,8 @@ class RendererOverview {
                 } else {
                     el.innerHTML = '<b>Progress: </b>done';
                     if('data' in jdata) {
-                        this.data = jdata.data;
-                        this.renderGrid(jdata.data);
+                        this.data = jdata.data.metrics;
+                        this.renderGrid(this.data);
                     }
                 }
             })
