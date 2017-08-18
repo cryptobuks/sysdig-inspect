@@ -44,7 +44,7 @@ class Backend {
       var viewInfo = JSON.parse(request.params.view);
       response.setHeader('Content-Type', 'application/json');
       
-      var args = ['-r', fileName, '-v', viewInfo.id, '-j'];
+      var args = ['-r', fileName, '-v', viewInfo.id, '-j', '-pc'];
       if('from' in request.query) {
         args.push('--from');
         args.push(request.query.from);
@@ -62,11 +62,17 @@ class Backend {
       sysdigController.runCsysdig(args, response);
   }
 
-  _getIndex(request, response) {
+  _getSummary(request, response) {
       var fileName = request.params.fileName;
+      var filter = request.query.filter;
+
       response.setHeader('Content-Type', 'application/json');
       
       var args = ['-r', fileName, '-c', 'wsysdig_summary'];
+
+      if(filter !== undefined) {
+        args.push(filter);
+      }
 
       sysdigController.runSysdig(args, response);
   }
@@ -77,7 +83,7 @@ class Backend {
       });
 
       app.get('/capture/:fileName/summary', (request, response) => {
-        this._getIndex(request, response)
+        this._getSummary(request, response)
       });
 
       app.get('/capture/:fileName/:view', (request, response) => {

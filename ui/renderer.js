@@ -16,6 +16,7 @@ class RendererOverview {
         this.fileName = g_defaultFileName;
         this.tilesPerRow = 4;
         this.timelineSelectStart = -1;
+        this.isContainerSelectorPopulated = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -58,6 +59,22 @@ class RendererOverview {
             return (Math.floor((n / 1024) * 10) / 10) + 'K';
         }
         return n;
+    }
+
+    renderContainerSelector(cdata) {
+        if(!this.isContainerSelectorPopulated) {
+            var el = document.getElementById('cselector');
+            var selstr = '<option value="all">All Containers + Host</option>';
+            selstr += '<option value="host">Host Only</option>';
+
+            for(var k in cdata) {
+                selstr = selstr + '<option value="' + k + '">' + cdata[k] + ' (' + k + ')</option>';
+            }
+
+            el.innerHTML = selstr;
+
+            this.isContainerSelectorPopulated = true;
+        }
     }
 
     renderGrid(data) {
@@ -350,11 +367,28 @@ class RendererOverview {
         }
     }
 
+    onCSelectorChange(newval) {
+        if(newval === 'all') {
+            this.loadData();
+        } else if(newval === 'host') {
+            this.loadData('container.id=host');
+        } else {
+            this.loadData('container.id=' + newval);
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
-    loadData() {
-        var url = this.urlBase + '/capture/' + encodeURIComponent(this.fileName) + '/summary';
+    loadData(filter) {
+        if(filter !== undefined) {
+            var currentStr = '?' + 'filter=' + encodeURIComponent(filter);
+            var a = 0;
+        } else {
+            currentStr = '';
+        }
+
+        var url = this.urlBase + '/capture/' + encodeURIComponent(this.fileName) + '/summary' + currentStr;
 
         //
         // Download the summary
@@ -369,6 +403,7 @@ class RendererOverview {
                     el.innerHTML = '<b>Progress: </b>done';
                     if('data' in jdata) {
                         this.data = jdata.data.metrics;
+                        this.renderContainerSelector(jdata.data.info.containers);
                         this.renderGrid(this.data);
                     }
                 }
@@ -408,6 +443,9 @@ class RendererOverview {
         //
         var pbody = '';
         pbody += '<font face="arial" size="3.5">';
+        pbody += '    <b>Container Filter</b>:';
+        pbody += '    <select id="cselector" onchange="g_renderer.onCSelectorChange(this.value)">';
+        pbody += '    </select>';
         pbody += '    <div id="status" style="padding: 10px;">';
         pbody += '    <b>Progress: </b>';
         pbody += '    </div>';
