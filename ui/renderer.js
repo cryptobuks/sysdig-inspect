@@ -160,6 +160,11 @@ class RendererOverview {
     dig(filter, isEcho, forcedTitle) {
         var view;
         var title;
+
+        if(this.containerFilter !== undefined) {
+            filter = '(' + this.containerFilter + ') and (' + filter + ')';
+        }
+
         if(isEcho) {
             view = {id: 'echo'};
             title = 'Data buffers for time selection';
@@ -185,13 +190,24 @@ class RendererOverview {
         g_renderer.init(this.hierarchyManager, this.fileName, undefined, isEcho, title);
     }
 
+    csysdig(targetView, filter, sortingCol) {
+        if(this.containerFilter !== undefined) {
+            filter = '(' + this.containerFilter + ') and (' + filter + ')';
+        }
+
+        g_oldRenderer = g_renderer;
+        g_renderer = new RendererDrillDown();
+        document.onkeydown = g_renderer.onKeyDown;
+        g_renderer.init(targetView, filter, sortingCol + 1);
+    }
+
     onClickCtextMenu(num) {
         var targetView;
         var targetViewFilter;
         var targetViewSortingCol;
 
         if(num === 1) {
-            targetView = 'processes';
+            targetView = 'procs';
         } else if(num === 2) {
             targetView = 'files';
             //targetViewFilter = null;
@@ -228,10 +244,7 @@ class RendererOverview {
             targetViewSortingCol = 0;
         }
 
-        g_oldRenderer = g_renderer;
-        g_renderer = new RendererDrillDown();
-        document.onkeydown = g_renderer.onKeyDown;
-        g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
+        this.csysdig(targetView, targetViewFilter, targetViewSortingCol);
     }
 
     onMouseDownTimeline(event, num) {
@@ -338,10 +351,7 @@ class RendererOverview {
         } else if(targetView === 'echo') {
             this.dig(targetViewFilter, true, targetViewTitle);
         } else {
-            g_oldRenderer = g_renderer;
-            g_renderer = new RendererDrillDown();
-            document.onkeydown = g_renderer.onKeyDown;
-            g_renderer.init(targetView, targetViewFilter, targetViewSortingCol + 1);
+            this.csysdig(targetView, targetViewFilter, targetViewSortingCol);
         }
     }
 
@@ -371,9 +381,13 @@ class RendererOverview {
         if(newval === 'all') {
             this.loadData();
         } else if(newval === 'host') {
-            this.loadData('container.id=host');
+            var flt = 'container.id=host';
+            this.containerFilter = flt;
+            this.loadData(flt);
         } else {
-            this.loadData('container.id=' + newval);
+            var flt = 'container.id=' + newval;
+            this.containerFilter = flt;
+            this.loadData(flt);
         }
     }
 
