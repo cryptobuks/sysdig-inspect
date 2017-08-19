@@ -157,13 +157,23 @@ class RendererOverview {
     ///////////////////////////////////////////////////////////////////////////
     // User interaction methods
     ///////////////////////////////////////////////////////////////////////////
+    composeFilterWithContainer(filter) {
+        if(this.containerFilter !== undefined) {
+            if(filter !== undefined) {
+                filter = '(' + this.containerFilter + ') and (' + filter + ')';
+            } else {
+                filter = this.containerFilter;
+            }
+        }
+
+        return filter;
+    }
+
     dig(filter, isEcho, forcedTitle) {
         var view;
         var title;
 
-        if(this.containerFilter !== undefined) {
-            filter = '(' + this.containerFilter + ') and (' + filter + ')';
-        }
+        filter = this.composeFilterWithContainer(filter);
 
         if(isEcho) {
             view = {id: 'echo'};
@@ -191,9 +201,7 @@ class RendererOverview {
     }
 
     csysdig(targetView, filter, sortingCol) {
-        if(this.containerFilter !== undefined) {
-            filter = '(' + this.containerFilter + ') and (' + filter + ')';
-        }
+        filter = this.composeFilterWithContainer(filter);
 
         g_oldRenderer = g_renderer;
         g_renderer = new RendererDrillDown();
