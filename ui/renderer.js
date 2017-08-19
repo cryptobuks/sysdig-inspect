@@ -1,5 +1,6 @@
 var g_defaultFileName = 'lo.scap';
 const g_palette = ['steelblue', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green', 'Red'];
+const g_catPalette = {general: '#EBF5FB', file: '#EAFAF1', network: '#FEF9E7', security: '#FBEEE6', performance: '#F4ECF7', logs: '#D6EAF8'};
 var g_lastPalettePick = 0;
 
 if(isElectron()) {
@@ -14,7 +15,7 @@ class RendererOverview {
         this.urlBase = '';
         this.port = 0;
         this.fileName = g_defaultFileName;
-        this.tilesPerRow = 4;
+        this.tilesPerRow = 6;
         this.timelineSelectStart = -1;
         this.isContainerSelectorPopulated = false;
     }
@@ -85,13 +86,15 @@ class RendererOverview {
         for(var j = 0; j < data.length; j+=this.tilesPerRow) {
             tbody += '<tr>';
             for(var k = 0; (k < this.tilesPerRow) && (j + k < data.length); k++) {
+                var col = g_catPalette[data[j+k].category];
+
                 tbody += 
                 '<td id="sc' + (j + k) + '" ' +
                 'onmouseover="g_renderer.onMouseOverTile(' + (j + k) + ')" ' +
                 'onmouseout="g_renderer.onMouseOutTile(' + (j + k) + ')" ' +
                 'onclick="g_renderer.onClickTile(' + (j + k) + ')" ' +
-                'ondblclick="g_renderer.onDblclickTile(' + (j + k) + ')" ' +                
-                'style="border: 1px solid black;width: 20%;height:100px;text-align:center"><font face="arial" size="3">' + 
+                'ondblclick="g_renderer.onDblclickTile(' + (j + k) + ')" ' +
+                'style="border: 1px solid black;width:' + (100 / this.tilesPerRow) + '%;height:75px;text-align:center;background-color:' + col + '"><font face="arial" size="3">' + 
                 data[j+k].name +
                 '</font><br><br><font face="arial" size="6">' +
                 this.numToReadableStr(data[j+k].data.tot) +
@@ -381,7 +384,8 @@ class RendererOverview {
         if('col' in data) {
             tile.style.backgroundColor = data.col;
         } else {
-            tile.style.backgroundColor = "#FFFFFF";
+            var col = g_catPalette[this.data[num].category];
+            tile.style.backgroundColor = col;
         }
     }
 
@@ -476,10 +480,10 @@ class RendererOverview {
         pbody += '    </div>';
         pbody += '    <div id="cmenu" style="position:fixed;top:300px;left:100px;background:#cccccc;display:none;border:1px solid black;"></div>';
         pbody += '    <div style="width: 100%;text-align:left;">';
-        pbody += '        <div id="data" style="width:50%;display:inline-block;vertical-align:top;">';
+        pbody += '        <div id="data" style="width:70%;display:inline-block;vertical-align:top;">';
         pbody += '          <table id="dtable" style="width:100%;text-align:left;"></table>';
         pbody += '        </div>';
-        pbody += '        <div id="vizs" style="width:49%;display:inline-block;vertical-align:top;">';
+        pbody += '        <div id="vizs" style="width:29%;display:inline-block;vertical-align:top;">';
         pbody += '        </div>';
         pbody += '    </div>';
         pbody += '</font>';
