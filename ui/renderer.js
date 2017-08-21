@@ -1,3 +1,4 @@
+const TILES_ORGANIZATION = 'grouped'; // Can be either 'flat' or 'grouped'
 var g_defaultFileName = 'lo.scap';
 const g_palette = ['steelblue', 'MediumSeaGreen', 'BlueViolet', 'Crimson', 'DarkTurquoise', 'DodgerBlue', 'Chocolate', 'Green', 'Red'];
 const g_catPalette = {general: '#EBF5FB', file: '#EAFAF1', network: '#FEF9E7', security: '#FBEEE6', performance: '#F4ECF7', logs: '#D6EAF8'};
@@ -78,15 +79,73 @@ class RendererOverview {
         }
     }
 
-    renderGrid(data) {
-        var tb = document.getElementById('dtable');
+    extractCategories(data) {
+        var c = {};
 
+        for(var j = 0; j < data.length; j++) {
+            c[data[j].category] = 1;
+        }
+
+        return Object.keys(c);
+    }
+
+    getTileDefaultColor(metricInfo) {
+        if(metricInfo.data.noteworthy && metricInfo.data.tot !== 0) {
+            return '#ff0000';
+        } else {
+            return g_catPalette[metricInfo.category];
+        }
+    }
+
+    renderTilesGrouped(data) {
+        var tbody = '';
+        var cats = this.extractCategories(data);
+        var id = 0;
+
+        for(var j = 0; j < cats.length; j++) {
+            tbody += 
+            '<td id="cat' + j + '" ' +
+            'style="vertical-align:top;width:' + (100 / this.tilesPerRow) + '%;height:750px;text-align:center;"><font face="arial" size="3">' + 
+            cats[j]; 
+            tbody += '<br>';
+            tbody += '<br>';
+
+            var k = 0;
+            for(var l = 0; l < data.length; l++) {
+                if(data[l].category == cats[j]) {
+                    var col = this.getTileDefaultColor(data[l]);
+                    k++;
+                    //tbody += ;
+
+                    tbody += 
+                    '<div id="sc' + (id) + '" ' +
+                    'onmouseover="g_renderer.onMouseOverTile(' + (id) + ')" ' +
+                    'onmouseout="g_renderer.onMouseOutTile(' + (id) + ')" ' +
+                    'onclick="g_renderer.onClickTile(' + (id) + ')" ' +
+                    'ondblclick="g_renderer.onDblclickTile(' + (id) + ')" ' +
+                    'style="border: 1px solid black;width:99%;height:80px;text-align:center;background-color:' + col + '"><font face="arial" size="3">' + 
+                    data[l].name +
+                    '</font><br><br><font face="arial" size="5">' +
+                    this.numToReadableStr(data[l].data.tot) +
+                    '</font></div>';
+
+                    id++;
+                }
+            }
+
+            tbody += '</td>';
+        }
+
+        return tbody;
+    }
+
+    renderTilesFlat(data) {
         var tbody = '';
 
         for(var j = 0; j < data.length; j+=this.tilesPerRow) {
             tbody += '<tr>';
             for(var k = 0; (k < this.tilesPerRow) && (j + k < data.length); k++) {
-                var col = g_catPalette[data[j+k].category];
+                var col = this.getTileDefaultColor(data[j + k]);
 
                 tbody += 
                 '<td id="sc' + (j + k) + '" ' +
@@ -103,7 +162,17 @@ class RendererOverview {
             tbody += '</tr>';
         }
 
-        tb.innerHTML = tbody;
+        return tbody;
+    }
+
+    renderGrid(data) {
+        var tb = document.getElementById('dtable');
+
+        if(TILES_ORGANIZATION == 'grouped') {
+            tb.innerHTML = this.renderTilesGrouped(data);
+        } else {
+            tb.innerHTML = this.renderTilesFlat(data);
+        }
     }
 
     renderTimeline(num, data, width) {
@@ -384,7 +453,8 @@ class RendererOverview {
         if('col' in data) {
             tile.style.backgroundColor = data.col;
         } else {
-            var col = g_catPalette[this.data[num].category];
+            
+            var col = this.getTileDefaultColor(this.data[num]);
             tile.style.backgroundColor = col;
         }
     }
@@ -480,7 +550,7 @@ class RendererOverview {
         pbody += '    </div>';
         pbody += '    <div id="cmenu" style="position:fixed;top:300px;left:100px;background:#cccccc;display:none;border:1px solid black;"></div>';
         pbody += '    <div style="width: 100%;text-align:left;">';
-        pbody += '        <div id="data" style="width:70%;display:inline-block;vertical-align:top;">';
+        pbody += '        <div id="data" style="width:60%;display:inline-block;vertical-align:top;">';
         pbody += '          <table id="dtable" style="width:100%;text-align:left;"></table>';
         pbody += '        </div>';
         pbody += '        <div id="vizs" style="width:29%;display:inline-block;vertical-align:top;">';
