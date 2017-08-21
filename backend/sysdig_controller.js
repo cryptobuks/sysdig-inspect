@@ -21,6 +21,9 @@ if(process.platform === 'win32') {
 
     g_csysdigExe = g_sysdigDir + 'csysdig';
     g_sysdigExe = g_sysdigDir + 'sysdig';
+} else {
+    g_csysdigExe = 'csysdig';
+    g_sysdigExe = 'sysdig';
 }
 
 class SysdigController {
