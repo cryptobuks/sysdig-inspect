@@ -91,7 +91,7 @@ class RendererOverview {
 
     getTileDefaultColor(metricInfo) {
         if(metricInfo.data.noteworthy && metricInfo.data.tot !== 0) {
-            return '#ff0000';
+            return '#ff9999';
         } else {
             return g_catPalette[metricInfo.category];
         }
@@ -578,6 +578,6 @@ var g_renderer = new RendererOverview();
 var g_oldRenderer = 0;
 
 function init() {
-    document.onkeydown = g_renderer.onKeyDown;    
+    document.onkeydown = g_renderer.onKeyDown;
     g_renderer.init();
 }
