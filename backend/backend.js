@@ -35,6 +35,7 @@ class Backend {
   }
 
   _listViews(request, response) {
+      response.setHeader('Content-Type', 'application/json');
       var args = ['--list-views', '-j'];
       sysdigController.runCsysdig(args, response);
   }
