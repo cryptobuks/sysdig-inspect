@@ -66,14 +66,20 @@ class Backend {
   _getSummary(request, response) {
       var fileName = request.params.fileName;
       var filter = request.query.filter;
+      var nTimelineSamples = 0;
 
       response.setHeader('Content-Type', 'application/json');
       
       var args = ['-r', fileName, '-c', 'wsysdig_summary'];
 
+      if(request.query.nTimelineSamples !== undefined) {
+        nTimelineSamples = request.query.nTimelineSamples;
+      }
+      args.push(nTimelineSamples);
+      
       if(filter !== undefined) {
         args.push(filter);
-      }
+      }      
 
       sysdigController.runSysdig(args, response);
   }

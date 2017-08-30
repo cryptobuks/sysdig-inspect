@@ -477,11 +477,9 @@ class RendererOverview {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadData(filter) {
+        var currentStr = '?nTimelineSamples=200';
         if(filter !== undefined) {
-            var currentStr = '?' + 'filter=' + encodeURIComponent(filter);
-            var a = 0;
-        } else {
-            currentStr = '';
+            currentStr += '&filter=' + encodeURIComponent(filter);
         }
 
         var url = this.urlBase + '/capture/' + encodeURIComponent(this.fileName) + '/summary' + currentStr;
