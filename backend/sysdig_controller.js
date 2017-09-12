@@ -30,6 +30,7 @@ class SysdigController {
     sendError(message, response) {
         var resBody = {reason: message};
 
+        response.status(500);
         response.send(JSON.stringify(resBody));
     }
 

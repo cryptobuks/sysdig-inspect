@@ -66,16 +66,16 @@ class Backend {
   _getSummary(request, response) {
       var fileName = request.params.fileName;
       var filter = request.query.filter;
-      var nTimelineSamples = 0;
+      var sampleCount = 0;
 
       response.setHeader('Content-Type', 'application/json');
       
       var args = ['-r', fileName, '-c', 'wsysdig_summary'];
 
-      if(request.query.nTimelineSamples !== undefined) {
-        nTimelineSamples = request.query.nTimelineSamples;
+      if(request.query.sampleCount !== undefined) {
+        sampleCount = request.query.sampleCount;
       }
-      args.push(nTimelineSamples);
+      args.push(sampleCount);
       
       if(filter !== undefined) {
         args.push(filter);

@@ -477,7 +477,7 @@ class RendererOverview {
     // Bakend interaction functions
     ///////////////////////////////////////////////////////////////////////////
     loadData(filter) {
-        var currentStr = '?nTimelineSamples=200';
+        var currentStr = '?sampleCount=200';
         if(filter !== undefined) {
             currentStr += '&filter=' + encodeURIComponent(filter);
         }
