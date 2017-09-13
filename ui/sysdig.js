@@ -58,9 +58,9 @@ class RendererSysdig {
         //
         // Load the data
         //
-        //var encodedQueryArgs = this.encodeQueryData({from: 0, to: MAX_N_ROWS});
+        var encodedQueryArgs = this.encodeQueryData({viewAs: 'Hex'});
 
-        oboe(url.url /*+ '?' + encodedQueryArgs*/)
+        oboe(url.url + '?' + encodedQueryArgs)
             .node('slices.*', (jdata) => {
                 var el = document.getElementById('status');
                 var ddiv = document.getElementById('digdata');
