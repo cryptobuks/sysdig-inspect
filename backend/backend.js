@@ -66,6 +66,8 @@ class Backend {
         } else if(request.query.viewAs != "dottedAscii") {
           args.push('-A');
         }
+      } else {
+        args.push('-A');        
       }
 
       sysdigController.runCsysdig(args, response);
