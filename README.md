@@ -38,19 +38,29 @@ Where to start?
 ---
 
 **Installing Sysdig Inspector**
+(download and install instructions)
 
 **Creating a trace file**
+Sysdig Inspect works with trace files that have been collcted by [sysdig](https://github.com/draios/sysdig) on a Linux system. The [sysdig user guide](https://github.com/draios/sysdig/wiki/Sysdig-User-Guide) contains a nice introduction to the tool and includes many examples that can guide you through the command line and filtering syntax. 
+
+As a very easy quick start, here's how you capture all of the system events with sysdig:
+
+`sudo sysdig -w filename.scap`
 
 **Example Trace files**
 
 Support
 ---
 
-For support using sysdig, please contact the official mailing list.
+For support using sysdig, please contact the [the official mailing list](https://groups.google.com/forum/#!forum/sysdig).
 
 Join the Community
 ---
 * Contact the [official mailing list](https://groups.google.com/forum/#!forum/sysdig) for support and to talk with other users
 * Follow us on [Twitter](https://twitter.com/sysdig)
 * This is our [blog](https://sysdig.com/blog/). There are many like it, but this one is ours.
-* Join our [Public Slack](https://slack.sysdig.com) channel for sysdig announcements and discussions.
+* Join our [Public Slack](https://slack.sysdig.com) channel for announcements and discussions.
+
+License Terms
+---
+Sysdig is licensed to you under the [GPL 2.0](https://github.com/draios/sysdig/blob/dev/COPYING) open source license.
