@@ -24,7 +24,7 @@ Any tile in the overview page can be clicked to see the sub-second trend of the 
 
 You can double-click on a tile to see the data behind it. Click on the data or use the time line to further refine what you see.
 
-**Network, file and IPC payloads visualization**
+**Payloads visualization**
 (screenshot)
 
 Visualize the actual payloads that are read or written to files, network connections, pipes, unix sockets and any other type of file descriptor. 
