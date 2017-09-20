@@ -36,17 +36,18 @@ Every single byte of data that is read or written to a file, to a network connec
 Where to start?
 ---
 
-**Installing Sysdig Inspector**
-(download and install instructions)
+**Installing Sysdig Inspector**  
+(download and install instructions)  
 
-**Creating a trace file**
+**Creating a trace file**  
 Sysdig Inspect works with trace files that have been collcted by [sysdig](https://github.com/draios/sysdig) on a Linux system. The [sysdig user guide](https://github.com/draios/sysdig/wiki/Sysdig-User-Guide) contains a nice introduction to the tool and includes many examples that can guide you through the command line and filtering syntax. 
 
 As a very easy quick start, here's how you capture all of the system events with sysdig:
 
 `sudo sysdig -w filename.scap`
 
-**Example Trace files**
+**Example Trace files**  
+(link to a couple of trace files that can be used out of the box)
 
 Support
 ---
