@@ -42,7 +42,7 @@ Where to start?
 **Creating a trace file**  
 Sysdig Inspect works with trace files that have been collcted by [sysdig](https://github.com/draios/sysdig) on a Linux system. The [sysdig user guide](https://github.com/draios/sysdig/wiki/Sysdig-User-Guide) contains a nice introduction to the tool and includes many examples that can guide you through the command line and filtering syntax. 
 
-As a very easy quick start, here's how you capture all of the system events with sysdig:
+As a very easy quick start, here's how to capture all of the system events on a Linux box with sysdig:
 
 `sudo sysdig -w filename.scap`
 
