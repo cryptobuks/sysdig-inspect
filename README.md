@@ -9,30 +9,29 @@ To use Sysdig Inspect, you need trace files collected on Linux with [sysdig](htt
 
 Main Features
 ---
-**Capture highlights**
+**Instant highlights**  
+
+(screenshot)  
+
+The overview page offers an out of the box, at a glance summary of the content of the trace file. Content is organized in tiles, each of which shows the value of a relevant metric and its trend. Tiles are organized in categories to surface useful information more clearly. Tiles are also the starting point for investigation and drill down.
+
+**Sub-second microtrends and metric correlation**  
+
+(screenshot)  
+ 
+Once you click on a tile, you will see the sub-second trend of the metric shown by the tile. Yes, sub-second. You will be amazed at how different your system, containers and applications look at this level of granularity.  Multiple tiles can be selected to see how metrics correlate to each other and identify hot spots.
+
+**Intuitive drill-down-oriented workflow**  
+
+(screenshot)  
+
+You can double-click on a tile to see the data behind it and start a drill down session. At this point you can either use the timeline to restrict what data you are seeing, or further drill down by double clicking on any line of data. You will be able to see processes, files, network connections and much more.
+
+**Payloads and system calls visualization**
+
 (screenshot)
 
-The overview page offers an out of the box, at a glace summary of the content of the trace file. It includes highlights of resource utilization, file and network activity, security and performance issues and more.
-
-**Sub-second microtrends and metric correlation**
-(screenshot)(gif?)
-
-Any tile in the overview page can be clicked to see the sub-second trend of the selected metric. Multiple tiles can be selected to see how metrics correlate to each other and identify root causes.
-
-**Deep drill down**
-(screenshot)(gif?)
-
-You can double-click on a tile to see the data behind it. Click on the data or use the time line to further refine what you see.
-
-**Payloads visualization**
-(screenshot)
-
-Visualize the actual payloads that are read or written to files, network connections, pipes, unix sockets and any other type of file descriptor. 
-
-**Sysdig integration**
-(screenshot)
-
-View granular sysdig events for arbitrary selections.
+Every single byte of data that is read or written to a file, to a network connection o to a pipe is recorded in the trace file and Sysdig Inspect makes it easy to observe it. Do you need to troubleshoot an intermittent network issues or determine what a malware wrote to the file system? All the data you need is there. And, of course, you can switch at any time into sysdig mode and look at every single system calls.
 
 Where to start?
 ---
