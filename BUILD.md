@@ -7,12 +7,13 @@ You will need the following things properly installed on your computer.
 * [Node.js](https://nodejs.org/) (with NPM)
 * [Ember CLI](https://ember-cli.com/): `npm install -g ember-cli`
 * Sysdig!
-    1. clone https://github.com/draios/sysdig (`csysdig_json` branch)
+    1. clone https://github.com/draios/sysdig
     2. build the tool following instructions at https://github.com/draios/sysdig/wiki/How-to-Install-Sysdig-from-the-Source-Code#linux-and-osx
 * NPM nodemon
   * `npm install -g nodemon`
   * Will be expected to be installed when running the backend component (see below).
   * More info: https://www.npmjs.com/package/nodemon
+* [Python v2.7](https://www.python.org/download/releases/2.7/): Some npm dependencies require Python to be compiled (see [node-gyp](https://github.com/nodejs/node-gyp)). It is recommended to use [virtualenv](https://docs.python-guide.org/dev/virtualenvs/#lower-level-virtualenv) to properly configure the Python environment
 
 
 ## MAC/Linux

@@ -3,8 +3,10 @@
 # compiled output
 /dist
 /tmp
+/out
 
 # dependencies
+/deps
 /**/node_modules
 /**/bower_components
 
@@ -21,3 +23,6 @@ package.json.ember-try
 electron-out/
 ember-electron/resources*/sysdig/
 ember-electron/resources/capture-samples/
+
+# virtualenv
+/venv
